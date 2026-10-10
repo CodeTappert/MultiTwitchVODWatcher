@@ -1,0 +1,12 @@
+changelog:
+  categories:
+    - title: Features
+      labels: [feature, enhancement]
+    - title: Bug fixes
+      labels: [bug, fix]
+    - title: Translations
+      labels: [translation, i18n]
+    - title: Documentation
+      labels: [documentation, docs]
+    - title: Other changes
+      labels: ['*']

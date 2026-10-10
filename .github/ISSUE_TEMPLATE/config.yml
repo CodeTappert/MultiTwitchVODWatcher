@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Usage guide (wiki)
+    url: https://github.com/CodeTappert/MultiTwitchVODWatcher/wiki
+    about: How to use the app, plus troubleshooting.
+  - name: Questions & discussion
+    url: https://github.com/CodeTappert/MultiTwitchVODWatcher/issues
+    about: Ask a question or start a discussion.
