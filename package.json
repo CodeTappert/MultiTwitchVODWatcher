@@ -2,17 +2,17 @@
   "name": "vod-sync-local",
   "version": "1.0.0",
   "description": "Local multi-VOD sync player with yt-dlp downloads and session persistence",
-  "author": "Jannik Tappert",
+  "author": "CodeTappert <38758606+CodeTappert@users.noreply.github.com>",
   "license": "MIT",
   "private": true,
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "test": "node --test",
-    "dist": "electron-builder",
-    "dist:win": "electron-builder --win",
-    "dist:linux": "electron-builder --linux",
-    "dist:mac": "electron-builder --mac"
+    "dist": "electron-builder --publish never",
+    "dist:win": "electron-builder --win --publish never",
+    "dist:linux": "electron-builder --linux --publish never",
+    "dist:mac": "electron-builder --mac --publish never"
   },
   "devDependencies": {
     "electron": "^33.2.0",

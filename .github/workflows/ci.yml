@@ -3,11 +3,19 @@ name: CI
 on:
   push:
     branches: [develop, main]
-    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
 jobs:
+  version:
+    name: Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - id: v
+        run: echo "version=1.0.0-$(date -u +%Y%m%d)-${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -22,7 +30,7 @@ jobs:
 
   build:
     name: Build (${{ matrix.os }})
-    needs: test
+    needs: [test, version]
     strategy:
       fail-fast: false
       matrix:
@@ -41,6 +49,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Set build version
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: node -e "const fs=require('fs');const p=require('./package.json');p.version=process.env.VERSION;fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
       - name: Bundle yt-dlp
         shell: bash
         run: |
@@ -68,8 +80,8 @@ jobs:
 
   release:
     name: Release
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build, version]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -79,5 +91,7 @@ jobs:
           path: artifacts
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ needs.version.outputs.version }}
+          name: v${{ needs.version.outputs.version }}
           files: artifacts/**/*
           generate_release_notes: true
