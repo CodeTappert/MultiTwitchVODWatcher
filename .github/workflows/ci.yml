@@ -28,6 +28,25 @@ jobs:
       - run: npm ci
       - run: npm test
 
+  e2e:
+    name: E2E
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install-deps chromium
+      - run: xvfb-run -a npm run e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: test-results/
+
   build:
     name: Build (${{ matrix.os }})
     needs: [test, version]
@@ -82,7 +101,7 @@ jobs:
   release:
     name: Release
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [build, version]
+    needs: [build, version, e2e]
     runs-on: ubuntu-latest
     permissions:
       contents: write

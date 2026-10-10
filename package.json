@@ -9,12 +9,14 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test",
+    "e2e": "playwright test",
     "dist": "electron-builder --publish never",
     "dist:win": "electron-builder --win --publish never",
     "dist:linux": "electron-builder --linux --publish never",
     "dist:mac": "electron-builder --mac --publish never"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "electron": "^33.2.0",
     "electron-builder": "^25.1.8"
   },
