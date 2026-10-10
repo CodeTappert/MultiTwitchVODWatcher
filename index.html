@@ -11,6 +11,8 @@
     <button id="add" class="tool" data-i18n="toolbar.addVods">+ Add VODs</button>
     <button id="addUrl" class="tool" data-i18n="toolbar.fromUrl">+ From URL</button>
     <button id="muteAll" class="tool">🔊 All</button>
+    <button id="exportSession" class="tool" data-i18n="toolbar.export">Export</button>
+    <button id="importSession" class="tool" data-i18n="toolbar.import">Import</button>
     <label class="langsel" title="Language">🌐 <select id="lang"></select></label>
     <span class="hint" data-i18n="toolbar.hint">First video = master · offsets auto-aligned from stream start times</span>
   </header>
@@ -30,6 +32,7 @@
       <span class="note" id="dlDir"></span>
       <button id="pickDir" class="mini" data-i18n="urlPanel.changeFolder">Change folder</button>
       <span class="note" id="ytdlpStatus"></span>
+      <button id="ytdlpUpdate" class="mini" data-i18n="urlPanel.updateYtdlp">Update yt-dlp</button>
       <span class="note hidden" id="ffmpegHint"><span data-i18n="ffmpeg.need"></span><a data-i18n="ffmpeg.link" href="https://ffmpeg.org/download.html" target="_blank" rel="noreferrer"></a><span data-i18n="ffmpeg.after"></span></span>
       <button id="startDl" class="tool primary" data-i18n="urlPanel.download">Download</button>
       <button id="closePanel" class="mini" data-i18n="urlPanel.close">Close</button>
@@ -64,6 +67,8 @@
     <button id="toggleRuler" class="tool" data-i18n-title="controls.toggleRulerTitle" title="Show per-VOD timeline">▾</button>
     <button id="fullscreen" class="tool" data-i18n-title="controls.fullscreenTitle" title="Fullscreen (videos + play bar only)">⛶</button>
   </footer>
+
+  <div id="toasts"></div>
 
   <script src="lib/util.js"></script>
   <script src="renderer.js"></script>

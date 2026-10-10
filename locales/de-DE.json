@@ -11,6 +11,8 @@
     "fromUrl": "+ Von URL",
     "muteAll": "🔊 Alle",
     "muteAllMuted": "🔇 Alle",
+    "export": "Exportieren",
+    "import": "Importieren",
     "hint": "Erstes Video = Master · Offsets automatisch anhand der Stream-Startzeit ausgerichtet",
     "language": "Sprache"
   },
@@ -25,6 +27,7 @@
     "changeFolder": "Ordner ändern",
     "download": "Herunterladen",
     "close": "Schließen",
+    "updateYtdlp": "yt-dlp aktualisieren",
     "ytdlpMissing": "yt-dlp nicht gefunden (yt-dlp.exe in ./bin legen oder zum PATH hinzufügen)",
     "ytdlpFound": "yt-dlp: {command}"
   },
@@ -79,5 +82,17 @@
     "lengthLine": "Länge {length} · endet {ends}",
     "streamStart": "Stream-Start {start} ({delta} vs. Master)",
     "streamStartUnknown": "Stream-Start unbekannt"
+  },
+  "toast": {
+    "downloadDone": "Heruntergeladen: {name}",
+    "downloadFailed": "Download fehlgeschlagen: {name}",
+    "missingFiles": "{count} VOD-Datei(en) nicht gefunden",
+    "ytdlpUpdated": "yt-dlp aktualisiert",
+    "ytdlpUpdateFailed": "yt-dlp-Aktualisierung fehlgeschlagen",
+    "sessionExported": "Sitzung exportiert",
+    "sessionImported": "Sitzung importiert"
+  },
+  "dialog": {
+    "confirmImport": "Aktuelle Sitzung durch die importierte ersetzen?"
   }
 }

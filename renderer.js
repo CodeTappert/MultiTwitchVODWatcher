@@ -38,6 +38,10 @@ const els = {
   resync: document.getElementById('resync'),
   muteAll: document.getElementById('muteAll'),
   lang: document.getElementById('lang'),
+  exportSession: document.getElementById('exportSession'),
+  importSession: document.getElementById('importSession'),
+  ytdlpUpdate: document.getElementById('ytdlpUpdate'),
+  toasts: document.getElementById('toasts'),
   timeLabel: document.getElementById('timeLabel'),
   range: document.getElementById('timeline'),
   ruler: document.getElementById('ruler'),
@@ -129,6 +133,28 @@ function refreshDynamicText() {
   buildRuler();
 }
 
+function toast(message, type) {
+  if (!els.toasts) return;
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ' ' + type : '');
+  el.textContent = message;
+  els.toasts.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 250);
+  }, 4000);
+}
+
+function desktopNotify(title, body) {
+  try {
+    if (typeof Notification === 'function' && Notification.permission !== 'denied') {
+      new Notification(title, { body });
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
 function master() {
   return videos[0];
 }
@@ -197,17 +223,15 @@ function waitMeta(el) {
 
 function updateTimeline(t) {
   const { lo, hi } = bounds();
-  els.range.min = lo;
-  els.range.max = hi;
+  const span = hi - lo;
+  els.range.min = 0;
+  els.range.max = span > 0 ? span : 1;
   if (t === undefined) t = currentT();
-  if (hi <= lo) {
-    els.range.value = lo;
-  } else {
-    suppressRange = true;
-    els.range.value = Math.min(hi, Math.max(lo, t));
-    suppressRange = false;
-  }
-  els.timeLabel.textContent = `${fmtTime(t)} / ${fmtTime(hi)}`;
+  const pos = span > 0 ? Math.min(span, Math.max(0, t - lo)) : 0;
+  suppressRange = true;
+  els.range.value = pos;
+  suppressRange = false;
+  els.timeLabel.textContent = `${fmtTime(pos)} / ${fmtTime(span)}`;
   updateRulerPlayhead(t);
 }
 
@@ -461,11 +485,14 @@ function makeMaster(v) {
   if (videos[0] === v) return;
   const wasPlaying = playing;
   if (playing) pause();
+  const loBefore = bounds().lo;
   videos = [v, ...videos.filter((x) => x !== v)];
   for (const x of videos) els.grid.appendChild(x.tile);
   videos[0].manual = 0;
   recalcOffsets();
+  position = position - loBefore + bounds().lo;
   refreshMasterBadges();
+  updateTimeline();
   saveSession();
   if (wasPlaying) play();
 }
@@ -820,8 +847,10 @@ async function init() {
       downloadDir = session.downloadDir;
       els.dlDir.textContent = downloadDir;
     }
+    let missingCount = 0;
     for (const item of session.videos) {
       const exists = await api.fileExists(item.path);
+      if (!exists) missingCount++;
       await addVideo(item.path, {
         name: item.name,
         streamer: item.streamer,
@@ -833,6 +862,7 @@ async function init() {
         missing: !exists,
       });
     }
+    if (missingCount) toast(t('toast.missingFiles', { count: missingCount }), 'error');
     const m = master();
     if (m && m.el) {
       await waitMeta(m.el);
@@ -850,6 +880,64 @@ async function init() {
   buildRuler();
   updatePlayButton();
   els.muteAll.textContent = globalMuted ? t('toolbar.muteAllMuted') : t('toolbar.muteAll');
+}
+
+async function applySession(data) {
+  if (!data || !Array.isArray(data.videos)) return;
+  if (playing) pause();
+  for (const v of videos.slice()) {
+    if (v.el) {
+      v.el.pause();
+      v.el.removeAttribute('src');
+      v.el.load();
+    }
+    if (v.tile) v.tile.remove();
+    v.removed = true;
+  }
+  videos = [];
+  globalMuted = !!data.globalMuted;
+  if (Array.isArray(data.library)) library = data.library;
+  if (data.language && availableLangs.some((l) => l.id === data.language)) {
+    await setLanguage(data.language, false);
+    populateLangSelect();
+  }
+  downloadDir = await api.defaultDownloadDir();
+  if (data.downloadDir) downloadDir = data.downloadDir;
+  els.dlDir.textContent = downloadDir;
+  els.empty.style.display = data.videos.length ? 'none' : '';
+  els.range.disabled = data.videos.length === 0;
+
+  let missingCount = 0;
+  for (const item of data.videos) {
+    const exists = await api.fileExists(item.path);
+    if (!exists) missingCount++;
+    await addVideo(item.path, {
+      name: item.name,
+      streamer: item.streamer,
+      startTime: item.startTime,
+      offset: item.offset,
+      manual: item.manual,
+      volume: item.volume,
+      muted: item.muted,
+      missing: !exists,
+    });
+  }
+  const m = master();
+  if (m && m.el) {
+    await waitMeta(m.el);
+    await ensureStartTimes();
+    position = data.position || 0;
+    seekTo(position);
+  }
+  suppressRange = true;
+  updateTimeline();
+  applyGridLayout();
+  buildRuler();
+  updatePlayButton();
+  els.muteAll.textContent = globalMuted ? t('toolbar.muteAllMuted') : t('toolbar.muteAll');
+  if (missingCount) toast(t('toast.missingFiles', { count: missingCount }), 'error');
+  toast(t('toast.sessionImported'), 'success');
+  saveSession();
 }
 
 const jobsUi = new Map();
@@ -944,6 +1032,7 @@ async function downloadOne(url, ui) {
     ui.status.textContent = t('dl.failed');
     ui.fill.style.background = 'var(--danger)';
     console.error(err);
+    toast(t('toast.downloadFailed', { name: url }), 'error');
     return null;
   }
 
@@ -980,6 +1069,9 @@ async function downloadOne(url, ui) {
     saveSession();
     ui.status.textContent = t('dl.done');
     ui.fill.style.width = '100%';
+    const doneLabel = jobLabel(info.uploader, info.title);
+    toast(t('toast.downloadDone', { name: doneLabel }), 'success');
+    if (!document.hasFocus()) desktopNotify(t('app.title'), t('toast.downloadDone', { name: doneLabel }));
     return { file: result.file, streamer: info.uploader, startTime: info.startTime };
   } catch (err) {
     ui.bar.classList.remove('indeterminate');
@@ -987,6 +1079,7 @@ async function downloadOne(url, ui) {
     ui.status.textContent = t('dl.failed');
     ui.fill.style.background = 'var(--danger)';
     console.error(err);
+    toast(t('toast.downloadFailed', { name: info ? info.title : url }), 'error');
     return null;
   }
 }
@@ -1087,6 +1180,30 @@ function wireUi() {
     saveSession();
   };
 
+  els.ytdlpUpdate.onclick = async () => {
+    els.ytdlpUpdate.disabled = true;
+    try {
+      const res = await api.ytdlpUpdate();
+      const first = (res.output || '').split('\n').map((s) => s.trim()).filter(Boolean)[0] || '';
+      toast(first ? t('toast.ytdlpUpdated') + ' — ' + first : t('toast.ytdlpUpdated'), 'success');
+    } catch {
+      toast(t('toast.ytdlpUpdateFailed'), 'error');
+    } finally {
+      els.ytdlpUpdate.disabled = false;
+    }
+  };
+
+  els.exportSession.onclick = async () => {
+    const path = await api.exportSession(serialize());
+    if (path) toast(t('toast.sessionExported'), 'success');
+  };
+
+  els.importSession.onclick = async () => {
+    if (!window.confirm(t('dialog.confirmImport'))) return;
+    const data = await api.importSession();
+    if (data) await applySession(data);
+  };
+
   els.muteAll.onclick = () => {
     globalMuted = !globalMuted;
     for (const v of videos) {
@@ -1117,11 +1234,11 @@ function wireUi() {
   els.range.addEventListener('input', () => {
     if (suppressRange) return;
     userSeeking = true;
-    seekTo(parseFloat(els.range.value));
+    seekTo(parseFloat(els.range.value) + bounds().lo);
   });
   els.range.addEventListener('change', async () => {
     userSeeking = false;
-    const t = parseFloat(els.range.value);
+    const t = parseFloat(els.range.value) + bounds().lo;
     if (playing) await synchronize(t, true);
     else seekTo(t);
     saveSession();

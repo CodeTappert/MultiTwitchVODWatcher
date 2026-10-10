@@ -238,6 +238,31 @@ ipcMain.handle('i18n:load', async (_event, lang) => {
 
 ipcMain.handle('i18n:system', async () => app.getLocale());
 
+ipcMain.handle('session:exportFile', async (_event, data) => {
+  const res = await dialog.showSaveDialog({
+    title: 'Export session',
+    defaultPath: 'vod-sync-session.json',
+    filters: [{ name: 'JSON', extensions: ['json'] }],
+  });
+  if (res.canceled || !res.filePath) return null;
+  fs.writeFileSync(res.filePath, JSON.stringify(data, null, 2));
+  return res.filePath;
+});
+
+ipcMain.handle('session:importFile', async () => {
+  const res = await dialog.showOpenDialog({
+    title: 'Import session',
+    properties: ['openFile'],
+    filters: [{ name: 'JSON', extensions: ['json'] }],
+  });
+  if (res.canceled || !res.filePaths.length) return null;
+  try {
+    return JSON.parse(fs.readFileSync(res.filePaths[0], 'utf8'));
+  } catch {
+    return null;
+  }
+});
+
 function execFileAsync(cmd, args, options) {
   return new Promise((resolve, reject) => {
     execFile(cmd, args, options, (err, stdout, stderr) => {
@@ -329,6 +354,17 @@ ipcMain.handle('ffmpeg:status', async () => {
   } catch {
     return { available: false, location: null };
   }
+});
+
+ipcMain.handle('ytdlp:update', async () => {
+  const found = await ensureYtDlp();
+  if (!found) throw new Error('yt-dlp not found');
+  const { stdout, stderr } = await execFileAsync(found.cmd, [...found.prefix, '-U'], {
+    timeout: 180000,
+    windowsHide: true,
+    maxBuffer: 1024 * 1024 * 8,
+  });
+  return { output: ((stdout || '') + (stderr || '')).trim() };
 });
 
 ipcMain.handle('ytdlp:info', async (_event, url) => {

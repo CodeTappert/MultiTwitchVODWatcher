@@ -14,6 +14,8 @@ contextBridge.exposeInMainWorld('api', {
   pathsInfo: () => ipcRenderer.invoke('paths:info'),
   loadSession: () => ipcRenderer.invoke('session:load'),
   saveSession: (data) => ipcRenderer.invoke('session:save', data),
+  exportSession: (data) => ipcRenderer.invoke('session:exportFile', data),
+  importSession: () => ipcRenderer.invoke('session:importFile'),
   fileExists: (filePath) => ipcRenderer.invoke('file:exists', filePath),
   toFileURL: (filePath) => toFileURL(filePath),
 
@@ -22,6 +24,7 @@ contextBridge.exposeInMainWorld('api', {
   systemLocale: () => ipcRenderer.invoke('i18n:system'),
 
   ytdlpStatus: () => ipcRenderer.invoke('ytdlp:status'),
+  ytdlpUpdate: () => ipcRenderer.invoke('ytdlp:update'),
   ffmpegStatus: () => ipcRenderer.invoke('ffmpeg:status'),
   ytdlpInfo: (url) => ipcRenderer.invoke('ytdlp:info', url),
   ytdlpDownload: (payload) => ipcRenderer.invoke('ytdlp:download', payload),
