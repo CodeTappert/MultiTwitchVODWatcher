@@ -60,6 +60,7 @@
     "makeMaster": "Als Master",
     "remove": "✕",
     "removeTitle": "Entfernen",
+    "dragTitle": "Ziehen zum Umsortieren / zum Master machen",
     "sync": "Sync ",
     "volume": "Lautstärke",
     "resync": "Neu ausrichten",

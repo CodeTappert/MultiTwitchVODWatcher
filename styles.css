@@ -190,6 +190,20 @@ main {
   font-weight: 600;
 }
 
+.drag-handle {
+  cursor: grab;
+  color: var(--muted);
+  user-select: none;
+  padding: 0 2px;
+}
+
+.drag-handle:active { cursor: grabbing; }
+
+.tile.drag-over {
+  outline: 2px dashed var(--accent);
+  outline-offset: -2px;
+}
+
 .badge {
   font-size: 10px;
   font-weight: 700;

@@ -60,6 +60,7 @@
     "makeMaster": "Make master",
     "remove": "✕",
     "removeTitle": "Remove",
+    "dragTitle": "Drag to reorder / make master",
     "sync": "Sync ",
     "volume": "Volume",
     "resync": "Resync",

@@ -16,6 +16,7 @@ let position = 0;
 let anchorPos = 0;
 let anchorWall = 0;
 let library = [];
+let draggedVideo = null;
 let rulerPlayhead = null;
 let rulerLo = 0;
 let rulerHi = 1;
@@ -497,6 +498,29 @@ function makeMaster(v) {
   if (wasPlaying) play();
 }
 
+function reorderVideos(dragged, target) {
+  if (!dragged || !target || dragged === target) return;
+  const from = videos.indexOf(dragged);
+  const to = videos.indexOf(target);
+  if (from < 0 || to < 0) return;
+  const wasMaster = videos[0];
+  const wasPlaying = playing;
+  if (playing) pause();
+  const loBefore = bounds().lo;
+  const arr = videos.slice();
+  arr.splice(from, 1);
+  arr.splice(from < to ? to - 1 : to, 0, dragged);
+  videos = arr;
+  for (const x of videos) els.grid.appendChild(x.tile);
+  if (videos[0] !== wasMaster) videos[0].manual = 0;
+  recalcOffsets();
+  position = position - loBefore + bounds().lo;
+  refreshMasterBadges();
+  updateTimeline();
+  saveSession();
+  if (wasPlaying) play();
+}
+
 function removeVideo(v) {
   const wasMaster = videos[0] === v;
   if (v.el) {
@@ -657,7 +681,20 @@ function buildTile(v) {
   removeBtn.title = t('tile.removeTitle');
   removeBtn.setAttribute('data-i18n-title', 'tile.removeTitle');
 
-  nameRow.append(nameEl, badge, spacer, makeMasterBtn, removeBtn);
+  const handle = document.createElement('span');
+  handle.className = 'drag-handle';
+  handle.textContent = '⠿';
+  handle.title = t('tile.dragTitle');
+  handle.setAttribute('data-i18n-title', 'tile.dragTitle');
+  handle.draggable = true;
+  handle.addEventListener('dragstart', (e) => {
+    draggedVideo = v;
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', v.id); } catch { /* ignore */ }
+  });
+  handle.addEventListener('dragend', () => { draggedVideo = null; });
+
+  nameRow.append(handle, nameEl, badge, spacer, makeMasterBtn, removeBtn);
 
   const controls = document.createElement('div');
   controls.className = 'hv-row';
@@ -732,6 +769,20 @@ function buildTile(v) {
 
   hover.append(nameRow, controls);
   holder.appendChild(hover);
+
+  tile.addEventListener('dragover', (e) => {
+    if (!draggedVideo) return;
+    e.preventDefault();
+    tile.classList.add('drag-over');
+  });
+  tile.addEventListener('dragleave', () => tile.classList.remove('drag-over'));
+  tile.addEventListener('drop', (e) => {
+    e.preventDefault();
+    tile.classList.remove('drag-over');
+    const d = draggedVideo;
+    draggedVideo = null;
+    reorderVideos(d, v);
+  });
 
   tile.append(holder);
   els.grid.appendChild(tile);
