@@ -24,6 +24,13 @@
     "directories": {
       "output": "dist"
     },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "CodeTappert",
+        "repo": "MultiTwitchVODWatcher"
+      }
+    ],
     "files": [
       "main.js",
       "preload.js",
@@ -39,16 +46,28 @@
       "bin/**"
     ],
     "win": {
-      "target": ["nsis", "portable"],
+      "target": [
+        "nsis",
+        "portable"
+      ],
       "signAndEditExecutable": false
     },
     "mac": {
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "category": "public.app-category.video"
     },
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "category": "Video"
     }
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
   }
 }

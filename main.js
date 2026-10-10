@@ -71,7 +71,36 @@ function createWindow() {
       if (/^https?:/i.test(url)) shell.openExternal(url);
     }
   });
+  setupAutoUpdate(win);
   return win;
+}
+
+function setupAutoUpdate(win) {
+  if (!app.isPackaged) return;
+  if (process.env.PORTABLE_EXECUTABLE_DIR) return;
+  if (process.platform === 'darwin') return;
+  let autoUpdater;
+  try {
+    ({ autoUpdater } = require('electron-updater'));
+  } catch {
+    return;
+  }
+  autoUpdater.autoDownload = true;
+  autoUpdater.on('update-downloaded', () => {
+    dialog
+      .showMessageBox(win, {
+        type: 'info',
+        buttons: ['Restart now', 'Later'],
+        defaultId: 0,
+        cancelId: 1,
+        message: 'Update ready',
+        detail: 'A new version has been downloaded. Restart to apply it?',
+      })
+      .then((res) => {
+        if (res.response === 0) autoUpdater.quitAndInstall();
+      });
+  });
+  autoUpdater.checkForUpdatesAndNotify().catch(() => {});
 }
 
 app.whenReady().then(() => {
