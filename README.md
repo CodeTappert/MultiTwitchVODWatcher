@@ -73,6 +73,19 @@ The UI is translated via JSON files in [`locales/`](locales). To add a language:
 2. Set `meta.code` and `meta.name` (the language's own name), and translate the values.
 3. Reload — it appears in the language picker. PRs welcome!
 
+## Contributing
+
+Contributions of all kinds are welcome — bug reports, feature ideas, code, and translations.
+
+- **Issues**: open an [issue](https://github.com/CodeTappert/MultiTwitchVODWatcher/issues) for bugs or ideas. Screenshots and logs make it much easier to help.
+- **Pull requests**: please target the **`develop`** branch (not `main` — that's the release branch).
+- **Setup**: `npm install`, then `npm start`. There's no build step — it's plain JS/HTML/CSS.
+- **Tests**: run `npm test` (Node's built-in test runner) and make sure it's green. CI runs it on every PR.
+- **Translations**: see [Localization](#localization) — just add a `locales/<code>.json`.
+- **Not sure?** Open a draft PR or an issue and ask — happy to help.
+
+There are no strict style rules; matching the surrounding code is enough.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
