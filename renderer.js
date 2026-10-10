@@ -349,6 +349,7 @@ function updatePlayButton() {
   els.play.textContent = playing ? t('controls.pause') : t('controls.play');
   els.play.disabled = videos.length === 0 || !videos.some((v) => v.duration);
   els.resync.disabled = els.play.disabled;
+  updateMediaSession();
 }
 
 function startTick() {
@@ -732,7 +733,8 @@ async function addVideo(filePath, opts = {}) {
   el.playsInline = true;
   el.src = api.toFileURL(filePath);
   el.volume = opts.volume != null ? opts.volume : 1;
-  el.muted = opts.muted != null ? opts.muted : globalMuted;
+  const defaultMuted = videos.length === 0 ? globalMuted : true;
+  el.muted = opts.muted != null ? opts.muted : defaultMuted;
 
   const v = {
     id: uid(),
@@ -1028,6 +1030,37 @@ document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement) setCinema(false);
 });
 
+function setupMediaSession() {
+  if (!('mediaSession' in navigator)) return;
+  const handlers = {
+    play: () => { if (!playing) play(); },
+    pause: () => { if (playing) pause(); },
+    nexttrack: () => skip(10),
+    previoustrack: () => skip(-10),
+    seekforward: () => skip(10),
+    seekbackward: () => skip(-10),
+  };
+  for (const action of Object.keys(handlers)) {
+    try {
+      navigator.mediaSession.setActionHandler(action, handlers[action]);
+    } catch {
+      /* action not supported on this platform */
+    }
+  }
+}
+
+function updateMediaSession() {
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
+  const m = master();
+  if (m && typeof MediaMetadata === 'function') {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: displayName(m),
+      artist: 'MultiTwitchVODWatcher',
+    });
+  }
+}
+
 function wireUi() {
   els.add.onclick = () => {
     api.openVideos().then((paths) => {
@@ -1095,6 +1128,9 @@ function wireUi() {
   });
 
   window.addEventListener('keydown', (e) => {
+    if (e.key === 'MediaPlayPause') { e.preventDefault(); togglePlay(); return; }
+    if (e.key === 'MediaTrackNext') { e.preventDefault(); skip(10); return; }
+    if (e.key === 'MediaTrackPrevious') { e.preventDefault(); skip(-10); return; }
     const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName);
     if (e.code === 'Space' && !typing) {
       e.preventDefault();
@@ -1118,6 +1154,7 @@ setInterval(() => { if (playing) saveNow(); }, 3000);
 window.addEventListener('beforeunload', saveNow);
 window.addEventListener('blur', saveNow);
 
+setupMediaSession();
 wireUi();
 init();
 })();
