@@ -76,3 +76,8 @@ The UI is translated via JSON files in [`locales/`](locales). To add a language:
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## AI usage
+
+This project was written with the help of AI coding assistants. All changes are reviewed and tested by the maintainer.
+
