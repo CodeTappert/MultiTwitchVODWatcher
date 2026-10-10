@@ -40,7 +40,7 @@ jobs:
           - os: windows-latest
             script: dist:win
           - os: macos-latest
-            script: dist:mac
+            script: dist:mac -- --x64 --arm64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
