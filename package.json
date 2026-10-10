@@ -2,7 +2,7 @@
   "name": "vod-sync-local",
   "version": "1.0.0",
   "description": "Local multi-VOD sync player with yt-dlp downloads and session persistence",
-  "author": "CodeTappert <38758606+CodeTappert@users.noreply.github.com>",
+  "author": "Jannik Tappert <38758606+CodeTappert@users.noreply.github.com>",
   "license": "MIT",
   "private": true,
   "main": "main.js",
