@@ -8,6 +8,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "test": "node --test",
     "dist": "electron-builder",
     "dist:win": "electron-builder --win",
     "dist:linux": "electron-builder --linux",
@@ -27,10 +28,15 @@
       "main.js",
       "preload.js",
       "renderer.js",
+      "lib/**",
       "index.html",
       "styles.css",
       "locales/**",
+      "bin/**",
       "package.json"
+    ],
+    "asarUnpack": [
+      "bin/**"
     ],
     "win": {
       "target": ["nsis", "portable"],

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { spawn, execFile } = require('child_process');
@@ -8,8 +8,42 @@ const VIDEO_EXTENSIONS = ['mp4', 'mkv', 'webm', 'mov', 'm4v', 'ts', 'avi', 'flv'
 let ytdlp = null;
 const downloadJobs = new Map();
 
+function isWritable(dir) {
+  try {
+    fs.accessSync(dir, fs.constants.W_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+let cachedBaseDir = null;
+let portableMode = false;
+function baseDir() {
+  if (cachedBaseDir) return cachedBaseDir;
+  const portableDir = process.env.PORTABLE_EXECUTABLE_DIR;
+  if (portableDir && isWritable(portableDir)) {
+    cachedBaseDir = portableDir;
+    portableMode = true;
+    return cachedBaseDir;
+  }
+  try {
+    const exeDir = path.dirname(app.getPath('exe'));
+    if (fs.existsSync(path.join(exeDir, 'portable.txt')) && isWritable(exeDir)) {
+      cachedBaseDir = exeDir;
+      portableMode = true;
+      return cachedBaseDir;
+    }
+  } catch {
+    /* ignore */
+  }
+  cachedBaseDir = app.getPath('userData');
+  portableMode = false;
+  return cachedBaseDir;
+}
+
 function sessionFile() {
-  return path.join(app.getPath('userData'), 'session.json');
+  return path.join(baseDir(), 'session.json');
 }
 
 function createWindow() {
@@ -27,6 +61,16 @@ function createWindow() {
     },
   });
   win.loadFile(path.join(__dirname, 'index.html'));
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https?:/i.test(url)) shell.openExternal(url);
+    return { action: 'deny' };
+  });
+  win.webContents.on('will-navigate', (event, url) => {
+    if (url !== win.webContents.getURL()) {
+      event.preventDefault();
+      if (/^https?:/i.test(url)) shell.openExternal(url);
+    }
+  });
   return win;
 }
 
@@ -81,7 +125,7 @@ function backupSessionSnapshot() {
     const file = sessionFile();
     const data = readSessionFile(file);
     if (!hasData(data)) return;
-    const dir = path.join(app.getPath('userData'), 'backups');
+    const dir = path.join(baseDir(), 'backups');
     fs.mkdirSync(dir, { recursive: true });
     const stamp = new Date().toISOString().replace(/[:.]/g, '-');
     fs.copyFileSync(file, path.join(dir, 'session-' + stamp + '.json'));
@@ -142,8 +186,19 @@ ipcMain.handle('dialog:openDirectory', async () => {
 });
 
 ipcMain.handle('paths:defaultDownloadDir', async () => {
+  baseDir();
+  if (portableMode) return path.join(cachedBaseDir, 'downloads');
   return path.join(app.getPath('videos'), 'VOD Sync Downloads');
 });
+
+ipcMain.handle('paths:info', async () => ({
+  baseDir: baseDir(),
+  userData: app.getPath('userData'),
+  defaultDownloadDir: portableMode
+    ? path.join(cachedBaseDir, 'downloads')
+    : path.join(app.getPath('videos'), 'VOD Sync Downloads'),
+  portable: portableMode,
+}));
 
 ipcMain.handle('i18n:list', async () => {
   const dir = path.join(__dirname, 'locales');
@@ -192,13 +247,33 @@ function execFileAsync(cmd, args, options) {
   });
 }
 
+function binDir() {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, 'app.asar.unpacked', 'bin')
+    : path.join(__dirname, 'bin');
+}
+
 const YTDLP_CANDIDATES = () => [
+  { cmd: path.join(binDir(), process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp'), prefix: [] },
   { cmd: 'yt-dlp', prefix: [] },
-  { cmd: path.join(__dirname, 'bin', process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp'), prefix: [] },
   { cmd: 'python', prefix: ['-m', 'yt_dlp'] },
   { cmd: 'python3', prefix: ['-m', 'yt_dlp'] },
   { cmd: 'py', prefix: ['-3', '-m', 'yt_dlp'] },
 ];
+
+function localFfmpeg() {
+  const names = process.platform === 'win32' ? ['ffmpeg.exe'] : ['ffmpeg'];
+  for (const name of names) {
+    const candidate = path.join(binDir(), name);
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return null;
+}
+
+function ffmpegArgs() {
+  const local = localFfmpeg();
+  return local ? ['--ffmpeg-location', local] : [];
+}
 
 async function probeYtDlp() {
   for (const candidate of YTDLP_CANDIDATES()) {
@@ -245,6 +320,17 @@ ipcMain.handle('ytdlp:status', async () => {
   return { available: !!found, command: found ? found.cmd + ' ' + found.prefix.join(' ') : null };
 });
 
+ipcMain.handle('ffmpeg:status', async () => {
+  const local = localFfmpeg();
+  if (local) return { available: true, location: local };
+  try {
+    await execFileAsync('ffmpeg', ['-version'], { timeout: 15000, windowsHide: true });
+    return { available: true, location: 'PATH' };
+  } catch {
+    return { available: false, location: null };
+  }
+});
+
 ipcMain.handle('ytdlp:info', async (_event, url) => {
   const found = await ensureYtDlp();
   if (!found) throw new Error('yt-dlp not found');
@@ -275,6 +361,7 @@ ipcMain.handle('ytdlp:download', async (event, { url, quality, dir, id, uid }) =
     '--concurrent-fragments', '8',
     '--retries', '10',
     '--fragment-retries', '10',
+    ...ffmpegArgs(),
     '-f', formatFor(quality),
     '--merge-output-format', 'mp4',
     '-o', path.join(dir, '%(title)s [%(id)s].%(ext)s'),

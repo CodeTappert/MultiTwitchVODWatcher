@@ -392,6 +392,8 @@ body.cinema main {
 
 .note { color: var(--muted); font-size: 12px; }
 
+.note a { color: var(--accent); }
+
 #jobs { display: flex; flex-direction: column; gap: 6px; }
 
 .job {

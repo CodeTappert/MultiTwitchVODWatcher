@@ -28,6 +28,11 @@
     "ytdlpMissing": "yt-dlp not found (put yt-dlp.exe in ./bin or add it to PATH)",
     "ytdlpFound": "yt-dlp: {command}"
   },
+  "ffmpeg": {
+    "need": "Need ffmpeg? Download it from ",
+    "link": "ffmpeg.org",
+    "after": " and put ffmpeg(.exe) on your PATH or in the bin folder."
+  },
   "empty": {
     "line1": "No VODs loaded.",
     "clickPrefix": "Click",
