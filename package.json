@@ -1,0 +1,48 @@
+{
+  "name": "vod-sync-local",
+  "version": "1.0.0",
+  "description": "Local multi-VOD sync player with yt-dlp downloads and session persistence",
+  "author": "Jannik Tappert",
+  "license": "MIT",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:linux": "electron-builder --linux",
+    "dist:mac": "electron-builder --mac"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.dertapp.twitchvodsync",
+    "productName": "Twitch VOD Sync",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "index.html",
+      "styles.css",
+      "locales/**",
+      "package.json"
+    ],
+    "win": {
+      "target": ["nsis", "portable"],
+      "signAndEditExecutable": false
+    },
+    "mac": {
+      "target": ["dmg", "zip"],
+      "category": "public.app-category.video"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Video"
+    }
+  }
+}

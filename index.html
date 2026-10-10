@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; media-src 'self' file: blob:; style-src 'self' 'unsafe-inline';" />
+  <title>VOD Sync Local</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header id="toolbar">
+    <button id="add" class="tool" data-i18n="toolbar.addVods">+ Add VODs</button>
+    <button id="addUrl" class="tool" data-i18n="toolbar.fromUrl">+ From URL</button>
+    <button id="muteAll" class="tool">🔊 All</button>
+    <label class="langsel" title="Language">🌐 <select id="lang"></select></label>
+    <span class="hint" data-i18n="toolbar.hint">First video = master · offsets auto-aligned from stream start times</span>
+  </header>
+
+  <div id="urlPanel" class="hidden">
+    <textarea id="urls" rows="3" data-i18n-placeholder="urlPanel.placeholder" placeholder="Paste Twitch VOD (or any yt-dlp-supported) URLs, one per line"></textarea>
+    <div class="url-row">
+      <label><span data-i18n="urlPanel.quality">Quality</span>
+        <select id="quality">
+          <option value="best" data-i18n="urlPanel.qualityBest">Best</option>
+          <option value="1080" selected data-i18n="urlPanel.quality1080">1080p</option>
+          <option value="720" data-i18n="urlPanel.quality720">720p</option>
+          <option value="480" data-i18n="urlPanel.quality480">480p</option>
+          <option value="audio" data-i18n="urlPanel.qualityAudio">Audio only</option>
+        </select>
+      </label>
+      <span class="note" id="dlDir"></span>
+      <button id="pickDir" class="mini" data-i18n="urlPanel.changeFolder">Change folder</button>
+      <span class="note" id="ytdlpStatus"></span>
+      <button id="startDl" class="tool primary" data-i18n="urlPanel.download">Download</button>
+      <button id="closePanel" class="mini" data-i18n="urlPanel.close">Close</button>
+    </div>
+    <div id="jobs"></div>
+  </div>
+
+  <main>
+    <div id="grid"></div>
+    <div id="empty">
+      <p data-i18n="empty.line1">No VODs loaded.</p>
+      <p>
+        <span data-i18n="empty.clickPrefix">Click</span>
+        <b data-i18n="toolbar.addVods">+ Add VODs</b>
+        <span data-i18n="empty.toPick">to pick downloaded files, or</span>
+        <b data-i18n="toolbar.fromUrl">+ From URL</b>
+        <span data-i18n="empty.toFetch">to fetch with yt-dlp.</span>
+      </p>
+      <p data-i18n="empty.line3">The first file becomes the master; give the others a sync offset.</p>
+    </div>
+  </main>
+
+  <section id="ruler" class="hidden"></section>
+
+  <footer id="timelineBar">
+    <button id="back10" class="tool" data-i18n="controls.back10" data-i18n-title="controls.back10Title" title="Back 10s (←)">⏪ 10s</button>
+    <button id="play" class="tool primary" disabled>▶ Play</button>
+    <button id="fwd10" class="tool" data-i18n="controls.fwd10" data-i18n-title="controls.fwd10Title" title="Forward 10s (→)">10s ⏩</button>
+    <button id="resync" class="tool" disabled data-i18n="controls.resync" data-i18n-title="controls.resyncTitle" title="Re-align all streams to the master">⟲ Resync</button>
+    <input id="timeline" type="range" min="0" max="1" value="0" step="0.05" disabled />
+    <span id="timeLabel">00:00 / 00:00</span>
+    <button id="toggleRuler" class="tool" data-i18n-title="controls.toggleRulerTitle" title="Show per-VOD timeline">▾</button>
+    <button id="fullscreen" class="tool" data-i18n-title="controls.fullscreenTitle" title="Fullscreen (videos + play bar only)">⛶</button>
+  </footer>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

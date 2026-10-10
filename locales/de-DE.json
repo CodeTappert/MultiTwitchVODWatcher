@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "code": "de-DE",
+    "name": "Deutsch"
+  },
+  "app": {
+    "title": "VOD Sync Local"
+  },
+  "toolbar": {
+    "addVods": "+ VODs hinzufügen",
+    "fromUrl": "+ Von URL",
+    "muteAll": "🔊 Alle",
+    "muteAllMuted": "🔇 Alle",
+    "hint": "Erstes Video = Master · Offsets automatisch anhand der Stream-Startzeit ausgerichtet",
+    "language": "Sprache"
+  },
+  "urlPanel": {
+    "placeholder": "Twitch-VOD-URLs (oder andere von yt-dlp unterstützte) einfügen, eine pro Zeile",
+    "quality": "Qualität",
+    "qualityBest": "Beste",
+    "quality1080": "1080p",
+    "quality720": "720p",
+    "quality480": "480p",
+    "qualityAudio": "Nur Audio",
+    "changeFolder": "Ordner ändern",
+    "download": "Herunterladen",
+    "close": "Schließen",
+    "ytdlpMissing": "yt-dlp nicht gefunden (yt-dlp.exe in ./bin legen oder zum PATH hinzufügen)",
+    "ytdlpFound": "yt-dlp: {command}"
+  },
+  "empty": {
+    "line1": "Keine VODs geladen.",
+    "clickPrefix": "Klicke",
+    "toPick": "um heruntergeladene Dateien auszuwählen, oder",
+    "toFetch": "um sie mit yt-dlp zu laden.",
+    "line3": "Die erste Datei wird zum Master; gib den anderen einen Sync-Offset."
+  },
+  "controls": {
+    "back10": "⏪ 10s",
+    "back10Title": "10s zurück (←)",
+    "play": "▶ Wiedergabe",
+    "pause": "⏸ Pause",
+    "fwd10": "10s ⏩",
+    "fwd10Title": "10s vor (→)",
+    "resync": "⟲ Neu ausrichten",
+    "resyncTitle": "Alle Streams am Master neu ausrichten",
+    "toggleRulerTitle": "VOD-Zeitleiste anzeigen",
+    "fullscreenTitle": "Vollbild (nur Videos + Steuerleiste)",
+    "fullscreenExitTitle": "Vollbild beenden"
+  },
+  "tile": {
+    "makeMaster": "Als Master",
+    "remove": "✕",
+    "removeTitle": "Entfernen",
+    "sync": "Sync ",
+    "volume": "Lautstärke",
+    "resync": "Neu ausrichten",
+    "fileNotFound": "Datei nicht gefunden:",
+    "locateFile": "Datei suchen…"
+  },
+  "dl": {
+    "queued": "in Warteschlange",
+    "metadata": "Metadaten",
+    "failed": "fehlgeschlagen",
+    "done": "fertig",
+    "doneFile": "fertig (Datei?)",
+    "downloading": "Wird heruntergeladen…",
+    "finalizing": "Abschluss — Audio + Video zusammenführen (ffmpeg)…",
+    "alreadyDownloaded": "bereits heruntergeladen (übersprungen)",
+    "error": "Fehler (siehe Terminal)"
+  },
+  "ruler": {
+    "offsetLine": "Offset {offset} (Position relativ zum Master)",
+    "lengthLine": "Länge {length} · endet {ends}",
+    "streamStart": "Stream-Start {start} ({delta} vs. Master)",
+    "streamStartUnknown": "Stream-Start unbekannt"
+  }
+}

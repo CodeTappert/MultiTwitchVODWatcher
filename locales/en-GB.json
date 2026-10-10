@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "code": "en-GB",
+    "name": "English"
+  },
+  "app": {
+    "title": "VOD Sync Local"
+  },
+  "toolbar": {
+    "addVods": "+ Add VODs",
+    "fromUrl": "+ From URL",
+    "muteAll": "🔊 All",
+    "muteAllMuted": "🔇 All",
+    "hint": "First video = master · offsets auto-aligned from stream start times",
+    "language": "Language"
+  },
+  "urlPanel": {
+    "placeholder": "Paste Twitch VOD (or any yt-dlp-supported) URLs, one per line",
+    "quality": "Quality",
+    "qualityBest": "Best",
+    "quality1080": "1080p",
+    "quality720": "720p",
+    "quality480": "480p",
+    "qualityAudio": "Audio only",
+    "changeFolder": "Change folder",
+    "download": "Download",
+    "close": "Close",
+    "ytdlpMissing": "yt-dlp not found (put yt-dlp.exe in ./bin or add it to PATH)",
+    "ytdlpFound": "yt-dlp: {command}"
+  },
+  "empty": {
+    "line1": "No VODs loaded.",
+    "clickPrefix": "Click",
+    "toPick": "to pick downloaded files, or",
+    "toFetch": "to fetch with yt-dlp.",
+    "line3": "The first file becomes the master; give the others a sync offset."
+  },
+  "controls": {
+    "back10": "⏪ 10s",
+    "back10Title": "Back 10s (←)",
+    "play": "▶ Play",
+    "pause": "⏸ Pause",
+    "fwd10": "10s ⏩",
+    "fwd10Title": "Forward 10s (→)",
+    "resync": "⟲ Resync",
+    "resyncTitle": "Re-align all streams to the master",
+    "toggleRulerTitle": "Show per-VOD timeline",
+    "fullscreenTitle": "Fullscreen (videos + play bar only)",
+    "fullscreenExitTitle": "Exit fullscreen"
+  },
+  "tile": {
+    "makeMaster": "Make master",
+    "remove": "✕",
+    "removeTitle": "Remove",
+    "sync": "Sync ",
+    "volume": "Volume",
+    "resync": "Resync",
+    "fileNotFound": "File not found:",
+    "locateFile": "Locate file…"
+  },
+  "dl": {
+    "queued": "queued",
+    "metadata": "metadata",
+    "failed": "failed",
+    "done": "done",
+    "doneFile": "done (file?)",
+    "downloading": "Downloading…",
+    "finalizing": "Finalizing — merging audio + video (ffmpeg)…",
+    "alreadyDownloaded": "already downloaded (skipped)",
+    "error": "Error (see terminal)"
+  },
+  "ruler": {
+    "offsetLine": "offset {offset} (position relative to master)",
+    "lengthLine": "length {length} · ends {ends}",
+    "streamStart": "stream start {start} ({delta} vs master)",
+    "streamStartUnknown": "stream start unknown"
+  }
+}

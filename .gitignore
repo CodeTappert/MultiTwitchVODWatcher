@@ -1,0 +1,5 @@
+node_modules/
+dist/
+*.log
+run.out.log
+run.err.log
