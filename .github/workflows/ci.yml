@@ -21,7 +21,7 @@ jobs:
         shell: bash
         run: |
           latest=$(git tag -l 'v1.0.*' | sed -E 's/^v1\.0\.([0-9]+).*/\1/' | sort -n | tail -1)
-          next=$(( ${latest:-0} + 1 ))
+          next=$(( ${latest:--1} + 1 ))
           echo "version=1.0.${next}-$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
 
   test:
