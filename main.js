@@ -71,7 +71,36 @@ function createWindow() {
       if (/^https?:/i.test(url)) shell.openExternal(url);
     }
   });
+  setupAutoUpdate(win);
   return win;
+}
+
+function setupAutoUpdate(win) {
+  if (!app.isPackaged) return;
+  if (process.env.PORTABLE_EXECUTABLE_DIR) return;
+  if (process.platform === 'darwin') return;
+  let autoUpdater;
+  try {
+    ({ autoUpdater } = require('electron-updater'));
+  } catch {
+    return;
+  }
+  autoUpdater.autoDownload = true;
+  autoUpdater.on('update-downloaded', () => {
+    dialog
+      .showMessageBox(win, {
+        type: 'info',
+        buttons: ['Restart now', 'Later'],
+        defaultId: 0,
+        cancelId: 1,
+        message: 'Update ready',
+        detail: 'A new version has been downloaded. Restart to apply it?',
+      })
+      .then((res) => {
+        if (res.response === 0) autoUpdater.quitAndInstall();
+      });
+  });
+  autoUpdater.checkForUpdatesAndNotify().catch(() => {});
 }
 
 app.whenReady().then(() => {
@@ -177,6 +206,26 @@ ipcMain.handle('file:exists', async (_event, filePath) => {
   }
 });
 
+ipcMain.handle('files:stat', async (_event, paths) =>
+  (Array.isArray(paths) ? paths : []).map((p) => {
+    try {
+      const s = fs.statSync(p);
+      return { exists: true, size: s.size };
+    } catch {
+      return { exists: false, size: 0 };
+    }
+  })
+);
+
+ipcMain.handle('file:delete', async (_event, filePath) => {
+  try {
+    fs.unlinkSync(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+});
+
 ipcMain.handle('dialog:openDirectory', async () => {
   const res = await dialog.showOpenDialog({
     title: 'Choose download folder',
@@ -237,6 +286,31 @@ ipcMain.handle('i18n:load', async (_event, lang) => {
 });
 
 ipcMain.handle('i18n:system', async () => app.getLocale());
+
+ipcMain.handle('session:exportFile', async (_event, data) => {
+  const res = await dialog.showSaveDialog({
+    title: 'Export session',
+    defaultPath: 'vod-sync-session.json',
+    filters: [{ name: 'JSON', extensions: ['json'] }],
+  });
+  if (res.canceled || !res.filePath) return null;
+  fs.writeFileSync(res.filePath, JSON.stringify(data, null, 2));
+  return res.filePath;
+});
+
+ipcMain.handle('session:importFile', async () => {
+  const res = await dialog.showOpenDialog({
+    title: 'Import session',
+    properties: ['openFile'],
+    filters: [{ name: 'JSON', extensions: ['json'] }],
+  });
+  if (res.canceled || !res.filePaths.length) return null;
+  try {
+    return JSON.parse(fs.readFileSync(res.filePaths[0], 'utf8'));
+  } catch {
+    return null;
+  }
+});
 
 function execFileAsync(cmd, args, options) {
   return new Promise((resolve, reject) => {
@@ -329,6 +403,17 @@ ipcMain.handle('ffmpeg:status', async () => {
   } catch {
     return { available: false, location: null };
   }
+});
+
+ipcMain.handle('ytdlp:update', async () => {
+  const found = await ensureYtDlp();
+  if (!found) throw new Error('yt-dlp not found');
+  const { stdout, stderr } = await execFileAsync(found.cmd, [...found.prefix, '-U'], {
+    timeout: 180000,
+    windowsHide: true,
+    maxBuffer: 1024 * 1024 * 8,
+  });
+  return { output: ((stdout || '') + (stderr || '')).trim() };
 });
 
 ipcMain.handle('ytdlp:info', async (_event, url) => {

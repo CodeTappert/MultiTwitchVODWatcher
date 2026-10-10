@@ -190,6 +190,20 @@ main {
   font-weight: 600;
 }
 
+.drag-handle {
+  cursor: grab;
+  color: var(--muted);
+  user-select: none;
+  padding: 0 2px;
+}
+
+.drag-handle:active { cursor: grabbing; }
+
+.tile.drag-over {
+  outline: 2px dashed var(--accent);
+  outline-offset: -2px;
+}
+
 .badge {
   font-size: 10px;
   font-weight: 700;
@@ -353,7 +367,8 @@ body.cinema main {
   padding: 4px;
 }
 
-#urlPanel {
+#urlPanel,
+#libraryPanel {
   flex: 0 0 auto;
   background: var(--panel-2);
   border-bottom: 1px solid var(--border);
@@ -361,6 +376,65 @@ body.cinema main {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+#libraryList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 45vh;
+  overflow: auto;
+}
+
+.lib-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #121214;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.lib-thumbwrap {
+  flex: 0 0 auto;
+  width: 120px;
+  height: 68px;
+  background: #000;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lib-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lib-missing {
+  color: var(--muted);
+  font-size: 20px;
+}
+
+.lib-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.lib-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lib-actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 6px;
 }
 
 #urls {
@@ -393,6 +467,35 @@ body.cinema main {
 .note { color: var(--muted); font-size: 12px; }
 
 .note a { color: var(--accent); }
+
+#toasts {
+  position: fixed;
+  right: 16px;
+  bottom: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 200;
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: var(--text);
+  font-size: 13px;
+  max-width: 360px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+.toast.success { border-left-color: #2ecc71; }
+.toast.error { border-left-color: var(--danger); }
 
 #jobs { display: flex; flex-direction: column; gap: 6px; }
 

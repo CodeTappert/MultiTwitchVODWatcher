@@ -1,6 +1,8 @@
 node_modules/
 dist/
 bin/
+test-results/
+playwright-report/
 *.log
 run.out.log
 run.err.log
