@@ -55,7 +55,8 @@
     "resyncTitle": "Alle Streams am Master neu ausrichten",
     "toggleRulerTitle": "VOD-Zeitleiste anzeigen",
     "fullscreenTitle": "Vollbild (nur Videos + Steuerleiste)",
-    "fullscreenExitTitle": "Vollbild beenden"
+    "fullscreenExitTitle": "Vollbild beenden",
+    "speedTitle": "Wiedergabegeschwindigkeit"
   },
   "tile": {
     "makeMaster": "Als Master",

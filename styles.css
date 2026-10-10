@@ -277,6 +277,14 @@ button.mini.danger { color: #ff8a8a; }
   cursor: pointer;
 }
 
+#speed {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+
 #ruler {
   flex: 0 0 auto;
   background: var(--panel-2);

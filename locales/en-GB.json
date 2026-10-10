@@ -55,7 +55,8 @@
     "resyncTitle": "Re-align all streams to the master",
     "toggleRulerTitle": "Show per-VOD timeline",
     "fullscreenTitle": "Fullscreen (videos + play bar only)",
-    "fullscreenExitTitle": "Exit fullscreen"
+    "fullscreenExitTitle": "Exit fullscreen",
+    "speedTitle": "Playback speed"
   },
   "tile": {
     "makeMaster": "Make master",

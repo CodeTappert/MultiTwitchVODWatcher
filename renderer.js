@@ -17,6 +17,7 @@ let anchorPos = 0;
 let anchorWall = 0;
 let library = [];
 let draggedVideo = null;
+let speed = 1;
 let rulerPlayhead = null;
 let rulerLo = 0;
 let rulerHi = 1;
@@ -45,6 +46,7 @@ const els = {
   toasts: document.getElementById('toasts'),
   timeLabel: document.getElementById('timeLabel'),
   range: document.getElementById('timeline'),
+  speed: document.getElementById('speed'),
   ruler: document.getElementById('ruler'),
   toggleRuler: document.getElementById('toggleRuler'),
   fullscreen: document.getElementById('fullscreen'),
@@ -169,8 +171,25 @@ function displayName(v) {
 }
 
 function currentT() {
-  if (playing) return anchorPos + (Date.now() - anchorWall) / 1000;
+  if (playing) return anchorPos + ((Date.now() - anchorWall) / 1000) * speed;
   return position;
+}
+
+function applySpeed() {
+  for (const v of videos) {
+    if (v.el) v.el.playbackRate = speed;
+  }
+}
+
+function setSpeed(s) {
+  const t = currentT();
+  speed = s;
+  if (playing) {
+    anchorPos = t;
+    anchorWall = Date.now();
+  }
+  applySpeed();
+  saveSession();
 }
 
 function startInfoText(v) {
@@ -370,7 +389,10 @@ async function synchronize(t, shouldPlay) {
   }
   await Promise.all(waits);
   if (shouldPlay) {
-    for (const v of toPlay) v.el.play().catch(() => {});
+    for (const v of toPlay) {
+      v.el.playbackRate = speed;
+      v.el.play().catch(() => {});
+    }
   }
 }
 
@@ -404,6 +426,7 @@ function tick() {
       if (!v.el.paused) v.el.pause();
     } else if (v.el.paused) {
       v.el.currentTime = local;
+      v.el.playbackRate = speed;
       v.el.play().catch(() => {});
     }
   }
@@ -817,6 +840,7 @@ async function addVideo(filePath, opts = {}) {
   el.volume = opts.volume != null ? opts.volume : 1;
   const defaultMuted = videos.length === 0 ? globalMuted : true;
   el.muted = opts.muted != null ? opts.muted : defaultMuted;
+  el.playbackRate = speed;
 
   const v = {
     id: uid(),
@@ -855,6 +879,7 @@ function serialize() {
     version: 1,
     globalMuted,
     language: currentLang,
+    speed,
     downloadDir,
     position: currentT(),
     library: library.map((e) => ({ url: e.url, id: e.id, path: e.path, title: e.title, streamer: e.streamer, startTime: e.startTime })),
@@ -883,6 +908,11 @@ function saveNow() {
 async function init() {
   const session = await api.loadSession();
   await setupI18n(session);
+
+  if (session && session.speed) {
+    speed = Number(session.speed) || 1;
+    els.speed.value = String(speed);
+  }
 
   downloadDir = await api.defaultDownloadDir();
   els.dlDir.textContent = downloadDir;
@@ -1367,6 +1397,8 @@ function wireUi() {
     else seekTo(t);
     saveSession();
   });
+
+  els.speed.onchange = () => setSpeed(parseFloat(els.speed.value));
 
   window.addEventListener('keydown', (e) => {
     if (e.key === 'MediaPlayPause') { e.preventDefault(); togglePlay(); return; }
