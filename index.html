@@ -13,6 +13,7 @@
     <button id="muteAll" class="tool">🔊 All</button>
     <button id="exportSession" class="tool" data-i18n="toolbar.export">Export</button>
     <button id="importSession" class="tool" data-i18n="toolbar.import">Import</button>
+    <button id="toggleLibrary" class="tool" data-i18n="toolbar.library">Library</button>
     <label class="langsel" title="Language">🌐 <select id="lang"></select></label>
     <span class="hint" data-i18n="toolbar.hint">First video = master · offsets auto-aligned from stream start times</span>
   </header>
@@ -38,6 +39,14 @@
       <button id="closePanel" class="mini" data-i18n="urlPanel.close">Close</button>
     </div>
     <div id="jobs"></div>
+  </div>
+
+  <div id="libraryPanel" class="hidden">
+    <div class="url-row">
+      <span class="note" data-i18n="library.title">Downloaded VODs</span>
+      <button id="closeLibrary" class="mini" data-i18n="urlPanel.close">Close</button>
+    </div>
+    <div id="libraryList"></div>
   </div>
 
   <main>

@@ -49,6 +49,10 @@ const els = {
   toggleRuler: document.getElementById('toggleRuler'),
   fullscreen: document.getElementById('fullscreen'),
   urlPanel: document.getElementById('urlPanel'),
+  toggleLibrary: document.getElementById('toggleLibrary'),
+  libraryPanel: document.getElementById('libraryPanel'),
+  libraryList: document.getElementById('libraryList'),
+  closeLibrary: document.getElementById('closeLibrary'),
   urls: document.getElementById('urls'),
   quality: document.getElementById('quality'),
   dlDir: document.getElementById('dlDir'),
@@ -1152,6 +1156,69 @@ async function startDownloads() {
   els.urls.value = '';
 }
 
+async function renderLibrary() {
+  const list = els.libraryList;
+  list.innerHTML = '';
+  if (!library.length) {
+    const empty = document.createElement('div');
+    empty.className = 'note';
+    empty.textContent = t('library.empty');
+    list.appendChild(empty);
+    return;
+  }
+  const stats = await api.filesStat(library.map((e) => e.path));
+  library.forEach((e, i) => {
+    const item = document.createElement('div');
+    item.className = 'lib-item';
+
+    const thumbWrap = document.createElement('div');
+    thumbWrap.className = 'lib-thumbwrap';
+    if (stats[i].exists) {
+      const vid = document.createElement('video');
+      vid.className = 'lib-thumb';
+      vid.muted = true;
+      vid.preload = 'metadata';
+      vid.src = api.toFileURL(e.path) + '#t=2';
+      thumbWrap.appendChild(vid);
+    } else {
+      const miss = document.createElement('div');
+      miss.className = 'lib-missing';
+      miss.textContent = '?';
+      thumbWrap.appendChild(miss);
+    }
+
+    const info = document.createElement('div');
+    info.className = 'lib-info';
+    const title = document.createElement('div');
+    title.className = 'lib-title';
+    title.textContent = jobLabel(e.streamer, e.title || e.path);
+    title.title = e.path;
+    const meta = document.createElement('div');
+    meta.className = 'note';
+    meta.textContent = stats[i].exists ? (stats[i].size / 1048576).toFixed(0) + ' MB' : t('library.missing');
+    info.append(title, meta);
+
+    const actions = document.createElement('div');
+    actions.className = 'lib-actions';
+    const addBtn = miniButton(t('library.add'), '', () => {
+      addVideo(e.path, { streamer: e.streamer, startTime: e.startTime });
+    });
+    const delBtn = miniButton(t('library.delete'), 'danger', () => deleteLibraryItem(e));
+    actions.append(addBtn, delBtn);
+
+    item.append(thumbWrap, info, actions);
+    list.appendChild(item);
+  });
+}
+
+async function deleteLibraryItem(e) {
+  if (!window.confirm(t('library.confirmDelete', { name: e.title || e.path }))) return;
+  await api.deleteFile(e.path);
+  library = library.filter((x) => x !== e);
+  renderLibrary();
+  saveSession();
+}
+
 function setCinema(on) {
   document.body.classList.toggle('cinema', on);
   els.fullscreen.textContent = on ? '⤢' : '⛶';
@@ -1270,6 +1337,12 @@ function wireUi() {
   els.addUrl.onclick = () => els.urlPanel.classList.toggle('hidden');
 
   els.closePanel.onclick = () => els.urlPanel.classList.add('hidden');
+
+  els.toggleLibrary.onclick = () => {
+    const hidden = els.libraryPanel.classList.toggle('hidden');
+    if (!hidden) renderLibrary();
+  };
+  els.closeLibrary.onclick = () => els.libraryPanel.classList.add('hidden');
 
   els.pickDir.onclick = async () => {
     const dir = await api.openDirectory();

@@ -13,6 +13,7 @@
     "muteAllMuted": "🔇 Alle",
     "export": "Exportieren",
     "import": "Importieren",
+    "library": "Bibliothek",
     "hint": "Erstes Video = Master · Offsets automatisch anhand der Stream-Startzeit ausgerichtet",
     "language": "Sprache"
   },
@@ -83,6 +84,14 @@
     "lengthLine": "Länge {length} · endet {ends}",
     "streamStart": "Stream-Start {start} ({delta} vs. Master)",
     "streamStartUnknown": "Stream-Start unbekannt"
+  },
+  "library": {
+    "title": "Heruntergeladene VODs",
+    "empty": "Noch keine heruntergeladenen VODs.",
+    "add": "Hinzufügen",
+    "delete": "Löschen",
+    "missing": "Datei fehlt",
+    "confirmDelete": "\"{name}\" von der Festplatte löschen?"
   },
   "toast": {
     "downloadDone": "Heruntergeladen: {name}",

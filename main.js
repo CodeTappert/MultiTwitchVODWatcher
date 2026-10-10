@@ -177,6 +177,26 @@ ipcMain.handle('file:exists', async (_event, filePath) => {
   }
 });
 
+ipcMain.handle('files:stat', async (_event, paths) =>
+  (Array.isArray(paths) ? paths : []).map((p) => {
+    try {
+      const s = fs.statSync(p);
+      return { exists: true, size: s.size };
+    } catch {
+      return { exists: false, size: 0 };
+    }
+  })
+);
+
+ipcMain.handle('file:delete', async (_event, filePath) => {
+  try {
+    fs.unlinkSync(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+});
+
 ipcMain.handle('dialog:openDirectory', async () => {
   const res = await dialog.showOpenDialog({
     title: 'Choose download folder',

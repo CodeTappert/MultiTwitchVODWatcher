@@ -17,6 +17,8 @@ contextBridge.exposeInMainWorld('api', {
   exportSession: (data) => ipcRenderer.invoke('session:exportFile', data),
   importSession: () => ipcRenderer.invoke('session:importFile'),
   fileExists: (filePath) => ipcRenderer.invoke('file:exists', filePath),
+  filesStat: (paths) => ipcRenderer.invoke('files:stat', paths),
+  deleteFile: (filePath) => ipcRenderer.invoke('file:delete', filePath),
   toFileURL: (filePath) => toFileURL(filePath),
 
   listLocales: () => ipcRenderer.invoke('i18n:list'),

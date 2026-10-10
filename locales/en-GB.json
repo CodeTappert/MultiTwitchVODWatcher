@@ -13,6 +13,7 @@
     "muteAllMuted": "🔇 All",
     "export": "Export",
     "import": "Import",
+    "library": "Library",
     "hint": "First video = master · offsets auto-aligned from stream start times",
     "language": "Language"
   },
@@ -83,6 +84,14 @@
     "lengthLine": "length {length} · ends {ends}",
     "streamStart": "stream start {start} ({delta} vs master)",
     "streamStartUnknown": "stream start unknown"
+  },
+  "library": {
+    "title": "Downloaded VODs",
+    "empty": "No downloaded VODs yet.",
+    "add": "Add",
+    "delete": "Delete",
+    "missing": "File missing",
+    "confirmDelete": "Delete \"{name}\" from disk?"
   },
   "toast": {
     "downloadDone": "Downloaded: {name}",
