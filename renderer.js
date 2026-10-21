@@ -18,6 +18,7 @@ let anchorWall = 0;
 let library = [];
 let draggedVideo = null;
 let speed = 1;
+let spotlight = null;
 let rulerPlayhead = null;
 let rulerLo = 0;
 let rulerHi = 1;
@@ -50,6 +51,7 @@ const els = {
   ruler: document.getElementById('ruler'),
   toggleRuler: document.getElementById('toggleRuler'),
   fullscreen: document.getElementById('fullscreen'),
+  spotlight: document.getElementById('spotlight'),
   urlPanel: document.getElementById('urlPanel'),
   toggleLibrary: document.getElementById('toggleLibrary'),
   libraryPanel: document.getElementById('libraryPanel'),
@@ -137,6 +139,7 @@ function refreshDynamicText() {
   els.fullscreen.title = document.body.classList.contains('cinema')
     ? t('controls.fullscreenExitTitle')
     : t('controls.fullscreenTitle');
+  els.spotlight.textContent = spotlight ? t('controls.grid') : t('controls.spotlight');
   buildRuler();
 }
 
@@ -559,6 +562,8 @@ function removeVideo(v) {
   videos = videos.filter((x) => x !== v);
   if (v.tile) v.tile.remove();
   if (!videos.length) {
+    spotlight = null;
+    applyGridLayout();
     if (playing) pause();
     playing = false;
     stopTick();
@@ -571,6 +576,7 @@ function removeVideo(v) {
     return;
   }
   if (wasMaster) videos[0].manual = 0;
+  if (spotlight === v) setSpotlight(videos[0]);
   recalcOffsets();
   refreshMasterBadges();
   applyGridLayout();
@@ -622,10 +628,30 @@ function miniButton(label, cls, onClick) {
 function applyGridLayout() {
   const n = videos.length;
   let cols = 1;
-  if (n >= 7) cols = 4;
+  if (spotlight) cols = Math.max(1, n - 1);
+  else if (n >= 7) cols = 4;
   else if (n >= 5) cols = 3;
   else if (n >= 2) cols = 2;
   els.grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+  els.grid.style.gridTemplateRows = spotlight && n > 1 ? 'minmax(0, 3fr) minmax(0, 1fr)' : '';
+  els.grid.classList.toggle('spotlight', !!spotlight);
+  for (const v of videos) if (v.tile) v.tile.classList.toggle('featured', v === spotlight);
+  els.spotlight.textContent = spotlight ? t('controls.grid') : t('controls.spotlight');
+}
+
+function setMuted(v, muted) {
+  v.muted = muted;
+  v.el.muted = muted;
+  const btn = v.tile && v.tile.querySelector('.vol-mute');
+  if (btn) btn.textContent = muted ? '🔇' : '🔊';
+}
+
+// Spotlight one video (null = grid). Audio follows the spotlighted video.
+function setSpotlight(v) {
+  spotlight = v || null;
+  if (spotlight) for (const x of videos) setMuted(x, x !== spotlight);
+  applyGridLayout();
+  saveSession();
 }
 
 function refreshMasterBadges() {  videos.forEach((v, i) => {
@@ -726,7 +752,7 @@ function buildTile(v) {
   nameRow.append(handle, nameEl, badge, spacer, makeMasterBtn, removeBtn);
 
   const controls = document.createElement('div');
-  controls.className = 'hv-row';
+  controls.className = 'hv-row hv-controls';
 
   const offWrap = document.createElement('label');
   offWrap.className = 'offset';
@@ -813,6 +839,10 @@ function buildTile(v) {
     reorderVideos(d, v);
   });
 
+  holder.addEventListener('click', (e) => {
+    if (spotlight && spotlight !== v && !e.target.closest('button, input, label')) setSpotlight(v);
+  });
+
   tile.append(holder);
   els.grid.appendChild(tile);
 
@@ -884,6 +914,7 @@ function serialize() {
     speed,
     downloadDir,
     position: currentT(),
+    spotlight: videos.indexOf(spotlight),
     library: library.map((e) => ({ url: e.url, id: e.id, path: e.path, title: e.title, streamer: e.streamer, startTime: e.startTime })),
     videos: videos.map((v) => ({
       path: v.path,
@@ -961,6 +992,7 @@ async function init() {
     }
     suppressRange = true;
     updateTimeline();
+    spotlight = videos[session.spotlight] || null;
   }
 
   applyGridLayout();
@@ -982,6 +1014,7 @@ async function applySession(data) {
     v.removed = true;
   }
   videos = [];
+  spotlight = null;
   globalMuted = !!data.globalMuted;
   if (Array.isArray(data.library)) library = data.library;
   if (data.language && availableLangs.some((l) => l.id === data.language)) {
@@ -1018,6 +1051,7 @@ async function applySession(data) {
   }
   suppressRange = true;
   updateTimeline();
+  spotlight = videos[data.spotlight] || null;
   applyGridLayout();
   buildRuler();
   updatePlayButton();
@@ -1323,6 +1357,7 @@ function wireUi() {
   };
 
   els.fullscreen.onclick = toggleFullscreen;
+  els.spotlight.onclick = () => setSpotlight(spotlight ? null : videos[0]);
 
   els.lang.onchange = async () => {
     await setLanguage(els.lang.value, false);
@@ -1356,12 +1391,7 @@ function wireUi() {
 
   els.muteAll.onclick = () => {
     globalMuted = !globalMuted;
-    for (const v of videos) {
-      v.muted = globalMuted;
-      v.el.muted = globalMuted;
-      const btn = v.tile && v.tile.querySelector('.vol-mute');
-      if (btn) btn.textContent = globalMuted ? '🔇' : '🔊';
-    }
+    for (const v of videos) setMuted(v, globalMuted);
     els.muteAll.textContent = globalMuted ? t('toolbar.muteAllMuted') : t('toolbar.muteAll');
     saveSession();
   };
@@ -1419,6 +1449,9 @@ function wireUi() {
     } else if (e.code === 'KeyF' && !typing) {
       e.preventDefault();
       toggleFullscreen();
+    } else if (/^Digit[1-8]$/.test(e.code) && !typing && videos[e.code.slice(5) - 1]) {
+      e.preventDefault();
+      setSpotlight(videos[e.code.slice(5) - 1]);
     }
   });
 }

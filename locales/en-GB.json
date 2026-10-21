@@ -56,7 +56,10 @@
     "toggleRulerTitle": "Show per-VOD timeline",
     "fullscreenTitle": "Fullscreen (videos + play bar only)",
     "fullscreenExitTitle": "Exit fullscreen",
-    "speedTitle": "Playback speed"
+    "speedTitle": "Playback speed",
+    "spotlight": "Spotlight",
+    "grid": "Grid",
+    "spotlightTitle": "Spotlight one video (keys 1–8 switch)"
   },
   "tile": {
     "makeMaster": "Make master",

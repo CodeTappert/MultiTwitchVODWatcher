@@ -56,7 +56,10 @@
     "toggleRulerTitle": "VOD-Zeitleiste anzeigen",
     "fullscreenTitle": "Vollbild (nur Videos + Steuerleiste)",
     "fullscreenExitTitle": "Vollbild beenden",
-    "speedTitle": "Wiedergabegeschwindigkeit"
+    "speedTitle": "Wiedergabegeschwindigkeit",
+    "spotlight": "Spotlight",
+    "grid": "Raster",
+    "spotlightTitle": "Ein Video hervorheben (Tasten 1–8 wechseln)"
   },
   "tile": {
     "makeMaster": "Als Master",

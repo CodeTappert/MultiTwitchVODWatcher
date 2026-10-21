@@ -169,6 +169,15 @@ main {
 
 .tile-hover .spacer { flex: 1 1 auto; }
 
+#grid.spotlight .tile.featured {
+  grid-column: 1 / -1;
+  order: -1;
+  border-color: var(--accent);
+}
+
+#grid.spotlight .tile:not(.featured) { cursor: pointer; }
+#grid.spotlight .tile:not(.featured) .hv-controls { display: none; }
+
 .missing-overlay {
   position: absolute;
   inset: 0;
