@@ -55,7 +55,12 @@
     "resyncTitle": "Re-align all streams to the master",
     "toggleRulerTitle": "Show per-VOD timeline",
     "fullscreenTitle": "Fullscreen (videos + play bar only)",
-    "fullscreenExitTitle": "Exit fullscreen"
+    "fullscreenExitTitle": "Exit fullscreen",
+    "speedTitle": "Playback speed",
+    "layoutTitle": "Layout · 1–8 = big video, shift+1–8 = second big video",
+    "layoutGrid": "Grid",
+    "layoutSpot": "Spotlight",
+    "layoutDual": "Spotlight ×2"
   },
   "tile": {
     "makeMaster": "Make master",
@@ -66,7 +71,9 @@
     "volume": "Volume",
     "resync": "Resync",
     "fileNotFound": "File not found:",
-    "locateFile": "Locate file…"
+    "locateFile": "Locate file…",
+    "slot1Title": "Show as big video 1 (key 1–8)",
+    "slot2Title": "Show as big video 2 (Spotlight ×2, Shift+1–8)"
   },
   "dl": {
     "queued": "queued",

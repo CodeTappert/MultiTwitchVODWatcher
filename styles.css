@@ -109,6 +109,7 @@ main {
   gap: 10px;
   height: 100%;
   min-height: 0;
+  position: relative;
 }
 
 .tile {
@@ -169,6 +170,36 @@ main {
 
 .tile-hover .spacer { flex: 1 1 auto; }
 
+#grid.spotlight {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+}
+
+#grid.spotlight .tile {
+  width: calc((100% - (var(--strip) - 1) * 10px) / var(--strip));
+  height: calc((100% - 10px) * (1 - var(--top)));
+}
+
+#grid.spotlight .tile.featured,
+#grid.spotlight .tile.featured2 {
+  order: -2;
+  width: calc((100% - 10px) * var(--split));
+  height: calc((100% - 10px) * var(--top));
+  border-color: var(--accent);
+}
+
+#grid.spotlight:not(.dual) .tile.featured { width: 100%; }
+#grid.spotlight .tile.featured2 { order: -1; width: calc((100% - 10px) * (1 - var(--split))); }
+#grid.spotlight .tile:not(.featured):not(.featured2) { cursor: pointer; }
+#grid.spotlight .tile:not(.featured):not(.featured2) .hv-controls { display: none; }
+
+.split { position: absolute; z-index: 7; }
+.split[hidden] { display: none; }
+.split.h { left: 0; right: 0; height: 10px; top: calc((100% - 10px) * var(--top)); cursor: row-resize; }
+.split.v { top: 0; width: 10px; height: calc((100% - 10px) * var(--top)); left: calc((100% - 10px) * var(--split)); cursor: col-resize; }
+.split:hover, .split:active { background: var(--accent); border-radius: 3px; }
+
 .missing-overlay {
   position: absolute;
   inset: 0;
@@ -220,6 +251,12 @@ button.mini {
 }
 
 button.mini.danger { color: #ff8a8a; }
+
+#grid.spotlight .tile.featured .slot-A,
+#grid.spotlight.dual .tile.featured2 .slot-B {
+  background: var(--accent);
+  border-color: var(--accent);
+}
 
 .offset {
   display: flex;
@@ -275,6 +312,15 @@ button.mini.danger { color: #ff8a8a; }
   min-width: 0;
   accent-color: var(--accent);
   cursor: pointer;
+}
+
+#speed,
+#layout {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 6px;
 }
 
 #ruler {

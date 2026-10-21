@@ -55,7 +55,12 @@
     "resyncTitle": "Alle Streams am Master neu ausrichten",
     "toggleRulerTitle": "VOD-Zeitleiste anzeigen",
     "fullscreenTitle": "Vollbild (nur Videos + Steuerleiste)",
-    "fullscreenExitTitle": "Vollbild beenden"
+    "fullscreenExitTitle": "Vollbild beenden",
+    "speedTitle": "Wiedergabegeschwindigkeit",
+    "layoutTitle": "Layout · 1–8 = großes Video, Umschalt+1–8 = zweites großes Video",
+    "layoutGrid": "Raster",
+    "layoutSpot": "Spotlight",
+    "layoutDual": "Spotlight ×2"
   },
   "tile": {
     "makeMaster": "Als Master",
@@ -66,7 +71,9 @@
     "volume": "Lautstärke",
     "resync": "Neu ausrichten",
     "fileNotFound": "Datei nicht gefunden:",
-    "locateFile": "Datei suchen…"
+    "locateFile": "Datei suchen…",
+    "slot1Title": "Als großes Video 1 anzeigen (Taste 1–8)",
+    "slot2Title": "Als großes Video 2 anzeigen (Spotlight ×2, Umschalt+1–8)"
   },
   "dl": {
     "queued": "in Warteschlange",

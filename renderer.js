@@ -17,6 +17,12 @@ let anchorPos = 0;
 let anchorWall = 0;
 let library = [];
 let draggedVideo = null;
+let speed = 1;
+let layout = 'grid'; // 'grid' | 'spot' | 'dual'
+let slotA = null;
+let slotB = null;
+let topRatio = 0.75;
+let splitRatio = 0.5;
 let rulerPlayhead = null;
 let rulerLo = 0;
 let rulerHi = 1;
@@ -45,9 +51,13 @@ const els = {
   toasts: document.getElementById('toasts'),
   timeLabel: document.getElementById('timeLabel'),
   range: document.getElementById('timeline'),
+  speed: document.getElementById('speed'),
   ruler: document.getElementById('ruler'),
   toggleRuler: document.getElementById('toggleRuler'),
   fullscreen: document.getElementById('fullscreen'),
+  layout: document.getElementById('layout'),
+  splitH: document.getElementById('splitH'),
+  splitV: document.getElementById('splitV'),
   urlPanel: document.getElementById('urlPanel'),
   toggleLibrary: document.getElementById('toggleLibrary'),
   libraryPanel: document.getElementById('libraryPanel'),
@@ -169,8 +179,25 @@ function displayName(v) {
 }
 
 function currentT() {
-  if (playing) return anchorPos + (Date.now() - anchorWall) / 1000;
+  if (playing) return anchorPos + ((Date.now() - anchorWall) / 1000) * speed;
   return position;
+}
+
+function applySpeed() {
+  for (const v of videos) {
+    if (v.el) v.el.playbackRate = speed;
+  }
+}
+
+function setSpeed(s) {
+  const t = currentT();
+  speed = s;
+  if (playing) {
+    anchorPos = t;
+    anchorWall = Date.now();
+  }
+  applySpeed();
+  saveSession();
 }
 
 function startInfoText(v) {
@@ -370,7 +397,10 @@ async function synchronize(t, shouldPlay) {
   }
   await Promise.all(waits);
   if (shouldPlay) {
-    for (const v of toPlay) v.el.play().catch(() => {});
+    for (const v of toPlay) {
+      v.el.playbackRate = speed;
+      v.el.play().catch(() => {});
+    }
   }
 }
 
@@ -404,6 +434,7 @@ function tick() {
       if (!v.el.paused) v.el.pause();
     } else if (v.el.paused) {
       v.el.currentTime = local;
+      v.el.playbackRate = speed;
       v.el.play().catch(() => {});
     }
   }
@@ -536,6 +567,7 @@ function removeVideo(v) {
   videos = videos.filter((x) => x !== v);
   if (v.tile) v.tile.remove();
   if (!videos.length) {
+    applyGridLayout();
     if (playing) pause();
     playing = false;
     stopTick();
@@ -548,6 +580,7 @@ function removeVideo(v) {
     return;
   }
   if (wasMaster) videos[0].manual = 0;
+  if (slotA === v) setSlot('A', videos.find((x) => x !== slotB) || videos[0]);
   recalcOffsets();
   refreshMasterBadges();
   applyGridLayout();
@@ -597,12 +630,78 @@ function miniButton(label, cls, onClick) {
 }
 
 function applyGridLayout() {
+  if (!videos.includes(slotA)) slotA = videos.find((x) => x !== slotB) || slotB || null;
+  if (!videos.includes(slotB) || slotB === slotA) slotB = videos.find((x) => x !== slotA) || null;
+  const dual = layout === 'dual' && !!slotB;
+  const spot = layout !== 'grid' && !!slotA;
   const n = videos.length;
   let cols = 1;
   if (n >= 7) cols = 4;
   else if (n >= 5) cols = 3;
   else if (n >= 2) cols = 2;
   els.grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+  // Spotlight uses flex-wrap (see styles.css): featured tiles fill row 1, the rest share row 2.
+  const strip = n - (dual ? 2 : 1);
+  els.grid.classList.toggle('spotlight', spot);
+  els.grid.classList.toggle('dual', spot && dual);
+  els.grid.style.setProperty('--top', spot && strip > 0 ? topRatio : 1);
+  els.grid.style.setProperty('--split', dual ? splitRatio : 1);
+  els.grid.style.setProperty('--strip', Math.max(1, strip));
+  els.splitH.hidden = !spot || strip <= 0;
+  els.splitV.hidden = !spot || !dual;
+  for (const v of videos) {
+    if (!v.tile) continue;
+    v.tile.classList.toggle('featured', spot && v === slotA);
+    v.tile.classList.toggle('featured2', spot && dual && v === slotB);
+  }
+  els.layout.value = layout;
+}
+
+function setMuted(v, muted) {
+  v.muted = muted;
+  v.el.muted = muted;
+  const btn = v.tile && v.tile.querySelector('.vol-mute');
+  if (btn) btn.textContent = muted ? '🔇' : '🔊';
+}
+
+// Put v into spotlight slot A or B (swapping if it's in the other one).
+// Audio resets to slot A; per-tile mute buttons can change it afterwards.
+function setSlot(which, v) {
+  if (which === 'B') {
+    if (v === slotA) slotA = slotB;
+    slotB = v;
+    if (layout !== 'dual') layout = 'dual';
+  } else {
+    if (v === slotB) slotB = slotA;
+    slotA = v;
+    if (layout === 'grid') layout = 'spot';
+  }
+  applyGridLayout();
+  if (slotA) for (const x of videos) setMuted(x, x !== slotA);
+  saveSession();
+}
+
+function setLayout(l) {
+  layout = l;
+  applyGridLayout();
+  if (l !== 'grid' && slotA) for (const x of videos) setMuted(x, x !== slotA);
+  saveSession();
+}
+
+function dragSplit(handle, onMove) {
+  handle.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    handle.setPointerCapture(e.pointerId);
+    const r = els.grid.getBoundingClientRect();
+    const move = (ev) => { onMove(ev, r); applyGridLayout(); };
+    const up = () => {
+      handle.removeEventListener('pointermove', move);
+      handle.removeEventListener('pointerup', up);
+      saveSession();
+    };
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', up);
+  });
 }
 
 function refreshMasterBadges() {  videos.forEach((v, i) => {
@@ -656,7 +755,9 @@ function buildTile(v) {
     pth.textContent = v.path;
     const btn = miniButton(t('tile.locateFile'), '', () => locateFile(v));
     btn.setAttribute('data-i18n', 'tile.locateFile');
-    overlay.append(msg, pth, btn);
+    const rm = miniButton(t('tile.removeTitle'), 'danger', () => removeVideo(v));
+    rm.setAttribute('data-i18n', 'tile.removeTitle');
+    overlay.append(msg, pth, btn, rm);
     holder.appendChild(overlay);
     v.missingOverlay = overlay;
   }
@@ -681,6 +782,12 @@ function buildTile(v) {
 
   const makeMasterBtn = miniButton(t('tile.makeMaster'), '', () => makeMaster(v));
   makeMasterBtn.setAttribute('data-i18n', 'tile.makeMaster');
+  const slotBtns = ['A', 'B'].map((which, i) => {
+    const b = miniButton(String(i + 1), 'slot-btn slot-' + which, () => setSlot(which, v));
+    b.title = t(`tile.slot${i + 1}Title`);
+    b.setAttribute('data-i18n-title', `tile.slot${i + 1}Title`);
+    return b;
+  });
   const removeBtn = miniButton('✕', 'danger', () => removeVideo(v));
   removeBtn.title = t('tile.removeTitle');
   removeBtn.setAttribute('data-i18n-title', 'tile.removeTitle');
@@ -698,10 +805,10 @@ function buildTile(v) {
   });
   handle.addEventListener('dragend', () => { draggedVideo = null; });
 
-  nameRow.append(handle, nameEl, badge, spacer, makeMasterBtn, removeBtn);
+  nameRow.append(handle, nameEl, badge, spacer, ...slotBtns, makeMasterBtn, removeBtn);
 
   const controls = document.createElement('div');
-  controls.className = 'hv-row';
+  controls.className = 'hv-row hv-controls';
 
   const offWrap = document.createElement('label');
   offWrap.className = 'offset';
@@ -788,6 +895,11 @@ function buildTile(v) {
     reorderVideos(d, v);
   });
 
+  holder.addEventListener('click', (e) => {
+    if (layout === 'grid' || e.target.closest('button, input, label')) return;
+    if (e.shiftKey) { if (v !== slotB) setSlot('B', v); } else if (v !== slotA) setSlot('A', v);
+  });
+
   tile.append(holder);
   els.grid.appendChild(tile);
 
@@ -817,6 +929,7 @@ async function addVideo(filePath, opts = {}) {
   el.volume = opts.volume != null ? opts.volume : 1;
   const defaultMuted = videos.length === 0 ? globalMuted : true;
   el.muted = opts.muted != null ? opts.muted : defaultMuted;
+  el.playbackRate = speed;
 
   const v = {
     id: uid(),
@@ -855,8 +968,14 @@ function serialize() {
     version: 1,
     globalMuted,
     language: currentLang,
+    speed,
     downloadDir,
     position: currentT(),
+    layout,
+    slotA: videos.indexOf(slotA),
+    slotB: videos.indexOf(slotB),
+    topRatio,
+    splitRatio,
     library: library.map((e) => ({ url: e.url, id: e.id, path: e.path, title: e.title, streamer: e.streamer, startTime: e.startTime })),
     videos: videos.map((v) => ({
       path: v.path,
@@ -871,6 +990,14 @@ function serialize() {
   };
 }
 
+function restoreLayout(data) {
+  layout = ['grid', 'spot', 'dual'].includes(data.layout) ? data.layout : 'grid';
+  slotA = videos[data.slotA] || null;
+  slotB = videos[data.slotB] || null;
+  if (data.topRatio) topRatio = data.topRatio;
+  if (data.splitRatio) splitRatio = data.splitRatio;
+}
+
 function saveSession() {
   clearTimeout(saveDebounce);
   saveDebounce = setTimeout(() => { api.saveSession(serialize()); }, 300);
@@ -883,6 +1010,11 @@ function saveNow() {
 async function init() {
   const session = await api.loadSession();
   await setupI18n(session);
+
+  if (session && session.speed) {
+    speed = Number(session.speed) || 1;
+    els.speed.value = String(speed);
+  }
 
   downloadDir = await api.defaultDownloadDir();
   els.dlDir.textContent = downloadDir;
@@ -929,6 +1061,7 @@ async function init() {
     }
     suppressRange = true;
     updateTimeline();
+    restoreLayout(session);
   }
 
   applyGridLayout();
@@ -986,6 +1119,7 @@ async function applySession(data) {
   }
   suppressRange = true;
   updateTimeline();
+  restoreLayout(data);
   applyGridLayout();
   buildRuler();
   updatePlayButton();
@@ -1291,6 +1425,9 @@ function wireUi() {
   };
 
   els.fullscreen.onclick = toggleFullscreen;
+  els.layout.onchange = () => setLayout(els.layout.value);
+  dragSplit(els.splitH, (e, r) => { topRatio = Math.min(0.9, Math.max(0.3, (e.clientY - r.top) / r.height)); });
+  dragSplit(els.splitV, (e, r) => { splitRatio = Math.min(0.8, Math.max(0.2, (e.clientX - r.left) / r.width)); });
 
   els.lang.onchange = async () => {
     await setLanguage(els.lang.value, false);
@@ -1324,12 +1461,7 @@ function wireUi() {
 
   els.muteAll.onclick = () => {
     globalMuted = !globalMuted;
-    for (const v of videos) {
-      v.muted = globalMuted;
-      v.el.muted = globalMuted;
-      const btn = v.tile && v.tile.querySelector('.vol-mute');
-      if (btn) btn.textContent = globalMuted ? '🔇' : '🔊';
-    }
+    for (const v of videos) setMuted(v, globalMuted);
     els.muteAll.textContent = globalMuted ? t('toolbar.muteAllMuted') : t('toolbar.muteAll');
     saveSession();
   };
@@ -1368,6 +1500,8 @@ function wireUi() {
     saveSession();
   });
 
+  els.speed.onchange = () => setSpeed(parseFloat(els.speed.value));
+
   window.addEventListener('keydown', (e) => {
     if (e.key === 'MediaPlayPause') { e.preventDefault(); togglePlay(); return; }
     if (e.key === 'MediaTrackNext') { e.preventDefault(); skip(10); return; }
@@ -1385,6 +1519,9 @@ function wireUi() {
     } else if (e.code === 'KeyF' && !typing) {
       e.preventDefault();
       toggleFullscreen();
+    } else if (/^Digit[1-8]$/.test(e.code) && !typing && videos[e.code.slice(5) - 1]) {
+      e.preventDefault();
+      setSlot(e.shiftKey ? 'B' : 'A', videos[e.code.slice(5) - 1]);
     }
   });
 }
