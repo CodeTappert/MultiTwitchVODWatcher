@@ -32,7 +32,7 @@ call npm run dist:win
 goto done
 
 :buildlinux
-echo Building Linux packages (AppImage + deb)...
+echo Building Linux packages (AppImage, deb, rpm, pacman, tar.gz)...
 call npm run dist:linux
 goto done
 

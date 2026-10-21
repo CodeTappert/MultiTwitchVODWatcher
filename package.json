@@ -64,7 +64,10 @@
     "linux": {
       "target": [
         "AppImage",
-        "deb"
+        "deb",
+        "rpm",
+        "pacman",
+        "tar.gz"
       ],
       "category": "Video"
     }

@@ -26,8 +26,13 @@ Download the VODs with [yt-dlp](https://github.com/yt-dlp/yt-dlp), load them sid
 Get the latest build from the **[Releases page](https://github.com/CodeTappert/MultiTwitchVODWatcher/releases)**.
 
 - **Windows**: `Twitch VOD Sync Setup <version>.exe` (installer — **auto-updates**) or `Twitch VOD Sync <version>.exe` (portable, no install).
-- **Linux**: `…AppImage` (**auto-updates**) or the `.deb`.
-- **macOS**: `.dmg` / `-mac.zip` for both **Apple Silicon (arm64)** and **Intel (x64)**.
+- **Linux** (x64):
+  - `…AppImage`: runs on most distros (**auto-updates**)
+  - `.deb`: Debian, Ubuntu, Mint, Pop!_OS
+  - `.rpm`: Fedora, RHEL, openSUSE
+  - `.pacman`: Arch, Manjaro, EndeavourOS
+  - `.tar.gz`: unpack and run, no install
+- **macOS**: supported, but there are no prebuilt downloads. Build it yourself with `npm run dist:mac` on a Mac (see below).
 
 The builds bundle **yt-dlp**; grab **ffmpeg** too if you download high-quality streams (see below).
 
@@ -53,8 +58,8 @@ Package for distribution (output in `dist/`):
 ```bash
 npm run dist         # current OS
 npm run dist:win     # Windows: NSIS installer + portable exe
-npm run dist:linux   # Linux: AppImage + .deb
-npm run dist:mac     # macOS: dmg + zip
+npm run dist:linux   # Linux: AppImage, .deb, .rpm, .pacman, .tar.gz
+npm run dist:mac     # macOS: dmg + zip (must be run on a Mac)
 ```
 
 There's also a `Makefile` (`make win` / `make linux` / `make mac` / `make start`) and, on Windows, `build.bat [win|linux|mac]`.

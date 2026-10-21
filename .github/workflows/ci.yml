@@ -66,8 +66,6 @@ jobs:
             script: dist:linux
           - os: windows-latest
             script: dist:win
-          - os: macos-latest
-            script: dist:mac -- --x64 --arm64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
@@ -76,6 +74,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Install rpm and pacman packaging tools
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y rpm libarchive-tools
       - name: Set build version
         env:
           VERSION: ${{ needs.version.outputs.version }}
@@ -86,7 +87,6 @@ jobs:
           mkdir -p bin
           case "${{ runner.os }}" in
             Windows) curl -fL -o bin/yt-dlp.exe https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe ;;
-            macOS)   curl -fL -o bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos && chmod +x bin/yt-dlp ;;
             *)       curl -fL -o bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux && chmod +x bin/yt-dlp ;;
           esac
           ls -la bin
@@ -101,8 +101,9 @@ jobs:
             dist/*.exe
             dist/*.AppImage
             dist/*.deb
-            dist/*.dmg
-            dist/*.zip
+            dist/*.rpm
+            dist/*.pacman
+            dist/*.tar.gz
             dist/latest*.yml
           if-no-files-found: warn
 
