@@ -10,7 +10,7 @@ Download the VODs with [yt-dlp](https://github.com/yt-dlp/yt-dlp), load them sid
 - **1–8+ videos at once**, laid out to fill the window (no scrolling).
 - **Automatic alignment** from the stream start time (read from yt-dlp metadata); manual `±` offset nudges for ingest delays.
 - **One transport** for everything: Play/Pause, `±10s` skip, and a shared timeline you can scrub. Works with `Space`, `←`/`→`, and your **media keys**. Adjustable **playback speed** (0.25×–4×) that stays in sync.
-- **Per-VOD controls** on hover: volume, mute, sync offset, resync.
+- **Per-VOD controls** on hover: volume, sound on/off (one VOD has sound at a time, which keeps media keys working), sync offset, resync.
 - **Timeline ruler** (`▾`) showing each VOD's span plus its real start time and offset vs. the master.
 - **Layouts**: Grid, Spotlight (one VOD big, the rest in a strip below) or Spotlight ×2 (two big VODs side by side). Drag the dividers to resize. Click a thumbnail or press `1`–`8` to switch the big VOD, `Shift`+click / `Shift`+`1`–`8` for the second one; audio follows the first big VOD.
 - **Drag to reorder** tiles — drop one at the front to make it the master.

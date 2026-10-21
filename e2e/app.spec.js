@@ -62,7 +62,9 @@ test('spotlight layout: toggle, keys switch, audio follows', async () => {
   win = await app.firstWindow();
   const tiles = win.locator('.tile');
   await expect(tiles).toHaveCount(3);
-  const muted = () => win.evaluate(() => [...document.querySelectorAll('.tile video')].map((v) => v.muted));
+  // Video elements are always muted (sound comes from one shared audio element); the tile buttons show which VOD has sound.
+  const muted = () => win.evaluate(() => [...document.querySelectorAll('.tile .vol-mute')].map((b) => b.textContent === '🔇'));
+  expect(await win.evaluate(() => [...document.querySelectorAll('.tile video')].every((v) => v.muted))).toBe(true);
 
   const slots = () => win.evaluate(() => [...document.querySelectorAll('.tile')]
     .map((t) => (t.classList.contains('featured') ? 'A' : t.classList.contains('featured2') ? 'B' : '-')).join(''));

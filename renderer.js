@@ -438,6 +438,7 @@ function tick() {
       v.el.play().catch(() => {});
     }
   }
+  syncAudio();
   if (!userSeeking) updateTimeline(t);
   const { hi } = bounds();
   if (videos.length && t >= hi) pause();
@@ -566,6 +567,8 @@ function removeVideo(v) {
   v.removed = true;
   videos = videos.filter((x) => x !== v);
   if (v.tile) v.tile.remove();
+  if (!v.muted && videos.length) setMuted(videos[0], false);
+  else syncAudio();
   if (!videos.length) {
     applyGridLayout();
     if (playing) pause();
@@ -657,11 +660,37 @@ function applyGridLayout() {
   els.layout.value = layout;
 }
 
+// All <video> elements stay muted; sound comes from this one shared element,
+// following whichever VOD is unmuted (at most one). Chromium drops the app's
+// Windows media session (media keys) once a second element has been audible.
+const audio = new Audio();
+
+function audioSource() {
+  return videos.find((x) => !x.muted && x.duration) || null;
+}
+
+function syncAudio() {
+  const v = audioSource();
+  audio.muted = globalMuted;
+  if (!v) {
+    audio.pause();
+    return;
+  }
+  if (audio.src !== v.el.src) audio.src = v.el.src;
+  audio.volume = v.volume;
+  audio.playbackRate = speed;
+  if (Math.abs(audio.currentTime - v.el.currentTime) > 0.3) audio.currentTime = v.el.currentTime;
+  if (v.el.paused) audio.pause();
+  else if (audio.paused) audio.play().catch(() => {});
+}
+
 function setMuted(v, muted) {
-  v.muted = muted;
-  v.el.muted = muted;
-  const btn = v.tile && v.tile.querySelector('.vol-mute');
-  if (btn) btn.textContent = muted ? '🔇' : '🔊';
+  for (const x of videos) {
+    x.muted = x === v ? muted : x.muted || !muted;
+    const btn = x.tile && x.tile.querySelector('.vol-mute');
+    if (btn) btn.textContent = x.muted ? '🔇' : '🔊';
+  }
+  syncAudio();
 }
 
 // Put v into spotlight slot A or B (swapping if it's in the other one).
@@ -677,14 +706,14 @@ function setSlot(which, v) {
     if (layout === 'grid') layout = 'spot';
   }
   applyGridLayout();
-  if (slotA) for (const x of videos) setMuted(x, x !== slotA);
+  if (slotA) setMuted(slotA, false);
   saveSession();
 }
 
 function setLayout(l) {
   layout = l;
   applyGridLayout();
-  if (l !== 'grid' && slotA) for (const x of videos) setMuted(x, x !== slotA);
+  if (l !== 'grid' && slotA) setMuted(slotA, false);
   saveSession();
 }
 
@@ -731,6 +760,7 @@ async function locateFile(v) {
   if (v.missingOverlay) v.missingOverlay.remove();
   v.missingOverlay = null;
   if (v.nameEl) v.nameEl.textContent = displayName(v);
+  syncAudio();
   updateTimeline();
   updatePlayButton();
   saveSession();
@@ -850,9 +880,7 @@ function buildTile(v) {
   resyncBtn.setAttribute('data-i18n', 'tile.resync');
 
   const muteBtn = miniButton(v.muted ? '🔇' : '🔊', 'vol-mute', () => {
-    v.muted = !v.muted;
-    v.el.muted = v.muted;
-    muteBtn.textContent = v.muted ? '🔇' : '🔊';
+    setMuted(v, !v.muted);
     saveSession();
   });
 
@@ -867,12 +895,8 @@ function buildTile(v) {
   vol.setAttribute('data-i18n-title', 'tile.volume');
   vol.oninput = () => {
     v.volume = parseFloat(vol.value);
-    v.el.volume = v.volume;
-    if (v.volume > 0 && v.muted) {
-      v.muted = false;
-      v.el.muted = false;
-      muteBtn.textContent = '🔊';
-    }
+    if (v.volume > 0 && v.muted) setMuted(v, false);
+    else syncAudio();
     saveSession();
   };
 
@@ -926,9 +950,7 @@ async function addVideo(filePath, opts = {}) {
   el.preload = 'metadata';
   el.playsInline = true;
   el.src = api.toFileURL(filePath);
-  el.volume = opts.volume != null ? opts.volume : 1;
-  const defaultMuted = videos.length === 0 ? globalMuted : true;
-  el.muted = opts.muted != null ? opts.muted : defaultMuted;
+  el.muted = true;
   el.playbackRate = speed;
 
   const v = {
@@ -939,20 +961,25 @@ async function addVideo(filePath, opts = {}) {
     startTime: opts.startTime || 0,
     offset: opts.offset || 0,
     manual: opts.manual || 0,
-    volume: el.volume,
-    muted: el.muted,
+    volume: opts.volume != null ? opts.volume : 1,
+    // Only one VOD has sound: the first one unless the session says otherwise.
+    muted: !!opts.muted || videos.some((x) => !x.muted),
     el,
     duration: 0,
     missing: !!opts.missing,
     removed: false,
   };
   videos.push(v);
+  for (const ev of ['play', 'pause', 'seeked', 'ratechange']) {
+    el.addEventListener(ev, () => { if (v === audioSource()) syncAudio(); });
+  }
 
   await waitMeta(el);
   v.duration = isFinite(el.duration) ? el.duration : 0;
   if (!v.duration && !opts.missing) v.missing = false;
 
   buildTile(v);
+  syncAudio();
   applyGridLayout();
   recalcOffsets();
   refreshMasterBadges();
@@ -1083,6 +1110,7 @@ async function applySession(data) {
     v.removed = true;
   }
   videos = [];
+  syncAudio();
   globalMuted = !!data.globalMuted;
   if (Array.isArray(data.library)) library = data.library;
   if (data.language && availableLangs.some((l) => l.id === data.language)) {
@@ -1461,7 +1489,7 @@ function wireUi() {
 
   els.muteAll.onclick = () => {
     globalMuted = !globalMuted;
-    for (const v of videos) setMuted(v, globalMuted);
+    syncAudio();
     els.muteAll.textContent = globalMuted ? t('toolbar.muteAllMuted') : t('toolbar.muteAll');
     saveSession();
   };
