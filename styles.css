@@ -252,6 +252,12 @@ button.mini {
 
 button.mini.danger { color: #ff8a8a; }
 
+#grid.spotlight .tile.featured .slot-A,
+#grid.spotlight.dual .tile.featured2 .slot-B {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
 .offset {
   display: flex;
   align-items: center;

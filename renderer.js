@@ -782,6 +782,12 @@ function buildTile(v) {
 
   const makeMasterBtn = miniButton(t('tile.makeMaster'), '', () => makeMaster(v));
   makeMasterBtn.setAttribute('data-i18n', 'tile.makeMaster');
+  const slotBtns = ['A', 'B'].map((which, i) => {
+    const b = miniButton(String(i + 1), 'slot-btn slot-' + which, () => setSlot(which, v));
+    b.title = t(`tile.slot${i + 1}Title`);
+    b.setAttribute('data-i18n-title', `tile.slot${i + 1}Title`);
+    return b;
+  });
   const removeBtn = miniButton('✕', 'danger', () => removeVideo(v));
   removeBtn.title = t('tile.removeTitle');
   removeBtn.setAttribute('data-i18n-title', 'tile.removeTitle');
@@ -799,7 +805,7 @@ function buildTile(v) {
   });
   handle.addEventListener('dragend', () => { draggedVideo = null; });
 
-  nameRow.append(handle, nameEl, badge, spacer, makeMasterBtn, removeBtn);
+  nameRow.append(handle, nameEl, badge, spacer, ...slotBtns, makeMasterBtn, removeBtn);
 
   const controls = document.createElement('div');
   controls.className = 'hv-row hv-controls';

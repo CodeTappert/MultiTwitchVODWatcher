@@ -71,7 +71,9 @@
     "volume": "Lautstärke",
     "resync": "Neu ausrichten",
     "fileNotFound": "Datei nicht gefunden:",
-    "locateFile": "Datei suchen…"
+    "locateFile": "Datei suchen…",
+    "slot1Title": "Als großes Video 1 anzeigen (Taste 1–8)",
+    "slot2Title": "Als großes Video 2 anzeigen (Spotlight ×2, Umschalt+1–8)"
   },
   "dl": {
     "queued": "in Warteschlange",

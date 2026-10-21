@@ -81,14 +81,20 @@ test('spotlight layout: toggle, keys switch, audio follows', async () => {
   expect(await slots()).toBe('B-A');
   expect(await muted()).toEqual([true, true, false]);
 
+  await tiles.nth(1).locator('.slot-B').dispatchEvent('click');
+  expect(await slots()).toBe('-BA');
+  await tiles.nth(0).locator('.slot-A').dispatchEvent('click');
+  expect(await slots()).toBe('AB-');
+  expect(await muted()).toEqual([false, true, true]);
+
   // Dragging the horizontal splitter shrinks the big row.
-  const before = (await tiles.nth(2).boundingBox()).height;
+  const before = (await tiles.nth(0).boundingBox()).height;
   const h = await win.locator('#splitH').boundingBox();
   await win.mouse.move(h.x + h.width / 2, h.y + h.height / 2);
   await win.mouse.down();
   await win.mouse.move(h.x + h.width / 2, h.y - 100, { steps: 5 });
   await win.mouse.up();
-  expect((await tiles.nth(2).boundingBox()).height).toBeLessThan(before - 50);
+  expect((await tiles.nth(0).boundingBox()).height).toBeLessThan(before - 50);
 
   await win.locator('#layout').selectOption('grid');
   await expect(win.locator('#grid')).not.toHaveClass(/spotlight/);

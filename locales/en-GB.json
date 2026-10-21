@@ -71,7 +71,9 @@
     "volume": "Volume",
     "resync": "Resync",
     "fileNotFound": "File not found:",
-    "locateFile": "Locate file…"
+    "locateFile": "Locate file…",
+    "slot1Title": "Show as big video 1 (key 1–8)",
+    "slot2Title": "Show as big video 2 (Spotlight ×2, Shift+1–8)"
   },
   "dl": {
     "queued": "queued",
