@@ -12,7 +12,7 @@ Download the VODs with [yt-dlp](https://github.com/yt-dlp/yt-dlp), load them sid
 - **One transport** for everything: Play/Pause, `±10s` skip, and a shared timeline you can scrub. Works with `Space`, `←`/`→`, and your **media keys**. Adjustable **playback speed** (0.25×–4×) that stays in sync.
 - **Per-VOD controls** on hover: volume, mute, sync offset, resync.
 - **Timeline ruler** (`▾`) showing each VOD's span plus its real start time and offset vs. the master.
-- **Spotlight** layout: one VOD big, the rest in a strip below. Click a thumbnail or press `1`–`8` to switch; audio follows the spotlighted VOD.
+- **Layouts**: Grid, Spotlight (one VOD big, the rest in a strip below) or Spotlight ×2 (two big VODs side by side). Drag the dividers to resize. Click a thumbnail or press `1`–`8` to switch the big VOD, `Shift`+click / `Shift`+`1`–`8` for the second one; audio follows the first big VOD.
 - **Drag to reorder** tiles — drop one at the front to make it the master.
 - **Built-in downloads** via yt-dlp: paste URLs and go. It fetches the streamer name, **skips URLs you already downloaded**, and can **update yt-dlp** itself. Non-master VODs start muted.
 - **Library** (`Library` button): browse and manage downloaded VODs with thumbnails — add them to the player or delete them from disk.

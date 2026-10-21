@@ -18,7 +18,11 @@ let anchorWall = 0;
 let library = [];
 let draggedVideo = null;
 let speed = 1;
-let spotlight = null;
+let layout = 'grid'; // 'grid' | 'spot' | 'dual'
+let slotA = null;
+let slotB = null;
+let topRatio = 0.75;
+let splitRatio = 0.5;
 let rulerPlayhead = null;
 let rulerLo = 0;
 let rulerHi = 1;
@@ -51,7 +55,9 @@ const els = {
   ruler: document.getElementById('ruler'),
   toggleRuler: document.getElementById('toggleRuler'),
   fullscreen: document.getElementById('fullscreen'),
-  spotlight: document.getElementById('spotlight'),
+  layout: document.getElementById('layout'),
+  splitH: document.getElementById('splitH'),
+  splitV: document.getElementById('splitV'),
   urlPanel: document.getElementById('urlPanel'),
   toggleLibrary: document.getElementById('toggleLibrary'),
   libraryPanel: document.getElementById('libraryPanel'),
@@ -139,7 +145,6 @@ function refreshDynamicText() {
   els.fullscreen.title = document.body.classList.contains('cinema')
     ? t('controls.fullscreenExitTitle')
     : t('controls.fullscreenTitle');
-  els.spotlight.textContent = spotlight ? t('controls.grid') : t('controls.spotlight');
   buildRuler();
 }
 
@@ -562,7 +567,6 @@ function removeVideo(v) {
   videos = videos.filter((x) => x !== v);
   if (v.tile) v.tile.remove();
   if (!videos.length) {
-    spotlight = null;
     applyGridLayout();
     if (playing) pause();
     playing = false;
@@ -576,7 +580,7 @@ function removeVideo(v) {
     return;
   }
   if (wasMaster) videos[0].manual = 0;
-  if (spotlight === v) setSpotlight(videos[0]);
+  if (slotA === v) setSlot('A', videos.find((x) => x !== slotB) || videos[0]);
   recalcOffsets();
   refreshMasterBadges();
   applyGridLayout();
@@ -626,17 +630,31 @@ function miniButton(label, cls, onClick) {
 }
 
 function applyGridLayout() {
+  if (!videos.includes(slotA)) slotA = videos.find((x) => x !== slotB) || slotB || null;
+  if (!videos.includes(slotB) || slotB === slotA) slotB = videos.find((x) => x !== slotA) || null;
+  const dual = layout === 'dual' && !!slotB;
+  const spot = layout !== 'grid' && !!slotA;
   const n = videos.length;
   let cols = 1;
-  if (spotlight) cols = Math.max(1, n - 1);
-  else if (n >= 7) cols = 4;
+  if (n >= 7) cols = 4;
   else if (n >= 5) cols = 3;
   else if (n >= 2) cols = 2;
   els.grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
-  els.grid.style.gridTemplateRows = spotlight && n > 1 ? 'minmax(0, 3fr) minmax(0, 1fr)' : '';
-  els.grid.classList.toggle('spotlight', !!spotlight);
-  for (const v of videos) if (v.tile) v.tile.classList.toggle('featured', v === spotlight);
-  els.spotlight.textContent = spotlight ? t('controls.grid') : t('controls.spotlight');
+  // Spotlight uses flex-wrap (see styles.css): featured tiles fill row 1, the rest share row 2.
+  const strip = n - (dual ? 2 : 1);
+  els.grid.classList.toggle('spotlight', spot);
+  els.grid.classList.toggle('dual', spot && dual);
+  els.grid.style.setProperty('--top', spot && strip > 0 ? topRatio : 1);
+  els.grid.style.setProperty('--split', dual ? splitRatio : 1);
+  els.grid.style.setProperty('--strip', Math.max(1, strip));
+  els.splitH.hidden = !spot || strip <= 0;
+  els.splitV.hidden = !spot || !dual;
+  for (const v of videos) {
+    if (!v.tile) continue;
+    v.tile.classList.toggle('featured', spot && v === slotA);
+    v.tile.classList.toggle('featured2', spot && dual && v === slotB);
+  }
+  els.layout.value = layout;
 }
 
 function setMuted(v, muted) {
@@ -646,12 +664,44 @@ function setMuted(v, muted) {
   if (btn) btn.textContent = muted ? '🔇' : '🔊';
 }
 
-// Spotlight one video (null = grid). Audio follows the spotlighted video.
-function setSpotlight(v) {
-  spotlight = v || null;
-  if (spotlight) for (const x of videos) setMuted(x, x !== spotlight);
+// Put v into spotlight slot A or B (swapping if it's in the other one).
+// Audio resets to slot A; per-tile mute buttons can change it afterwards.
+function setSlot(which, v) {
+  if (which === 'B') {
+    if (v === slotA) slotA = slotB;
+    slotB = v;
+    if (layout !== 'dual') layout = 'dual';
+  } else {
+    if (v === slotB) slotB = slotA;
+    slotA = v;
+    if (layout === 'grid') layout = 'spot';
+  }
   applyGridLayout();
+  if (slotA) for (const x of videos) setMuted(x, x !== slotA);
   saveSession();
+}
+
+function setLayout(l) {
+  layout = l;
+  applyGridLayout();
+  if (l !== 'grid' && slotA) for (const x of videos) setMuted(x, x !== slotA);
+  saveSession();
+}
+
+function dragSplit(handle, onMove) {
+  handle.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    handle.setPointerCapture(e.pointerId);
+    const r = els.grid.getBoundingClientRect();
+    const move = (ev) => { onMove(ev, r); applyGridLayout(); };
+    const up = () => {
+      handle.removeEventListener('pointermove', move);
+      handle.removeEventListener('pointerup', up);
+      saveSession();
+    };
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', up);
+  });
 }
 
 function refreshMasterBadges() {  videos.forEach((v, i) => {
@@ -840,7 +890,8 @@ function buildTile(v) {
   });
 
   holder.addEventListener('click', (e) => {
-    if (spotlight && spotlight !== v && !e.target.closest('button, input, label')) setSpotlight(v);
+    if (layout === 'grid' || e.target.closest('button, input, label')) return;
+    if (e.shiftKey) { if (v !== slotB) setSlot('B', v); } else if (v !== slotA) setSlot('A', v);
   });
 
   tile.append(holder);
@@ -914,7 +965,11 @@ function serialize() {
     speed,
     downloadDir,
     position: currentT(),
-    spotlight: videos.indexOf(spotlight),
+    layout,
+    slotA: videos.indexOf(slotA),
+    slotB: videos.indexOf(slotB),
+    topRatio,
+    splitRatio,
     library: library.map((e) => ({ url: e.url, id: e.id, path: e.path, title: e.title, streamer: e.streamer, startTime: e.startTime })),
     videos: videos.map((v) => ({
       path: v.path,
@@ -927,6 +982,14 @@ function serialize() {
       muted: v.muted,
     })),
   };
+}
+
+function restoreLayout(data) {
+  layout = ['grid', 'spot', 'dual'].includes(data.layout) ? data.layout : 'grid';
+  slotA = videos[data.slotA] || null;
+  slotB = videos[data.slotB] || null;
+  if (data.topRatio) topRatio = data.topRatio;
+  if (data.splitRatio) splitRatio = data.splitRatio;
 }
 
 function saveSession() {
@@ -992,7 +1055,7 @@ async function init() {
     }
     suppressRange = true;
     updateTimeline();
-    spotlight = videos[session.spotlight] || null;
+    restoreLayout(session);
   }
 
   applyGridLayout();
@@ -1014,7 +1077,6 @@ async function applySession(data) {
     v.removed = true;
   }
   videos = [];
-  spotlight = null;
   globalMuted = !!data.globalMuted;
   if (Array.isArray(data.library)) library = data.library;
   if (data.language && availableLangs.some((l) => l.id === data.language)) {
@@ -1051,7 +1113,7 @@ async function applySession(data) {
   }
   suppressRange = true;
   updateTimeline();
-  spotlight = videos[data.spotlight] || null;
+  restoreLayout(data);
   applyGridLayout();
   buildRuler();
   updatePlayButton();
@@ -1357,7 +1419,9 @@ function wireUi() {
   };
 
   els.fullscreen.onclick = toggleFullscreen;
-  els.spotlight.onclick = () => setSpotlight(spotlight ? null : videos[0]);
+  els.layout.onchange = () => setLayout(els.layout.value);
+  dragSplit(els.splitH, (e, r) => { topRatio = Math.min(0.9, Math.max(0.3, (e.clientY - r.top) / r.height)); });
+  dragSplit(els.splitV, (e, r) => { splitRatio = Math.min(0.8, Math.max(0.2, (e.clientX - r.left) / r.width)); });
 
   els.lang.onchange = async () => {
     await setLanguage(els.lang.value, false);
@@ -1451,7 +1515,7 @@ function wireUi() {
       toggleFullscreen();
     } else if (/^Digit[1-8]$/.test(e.code) && !typing && videos[e.code.slice(5) - 1]) {
       e.preventDefault();
-      setSpotlight(videos[e.code.slice(5) - 1]);
+      setSlot(e.shiftKey ? 'B' : 'A', videos[e.code.slice(5) - 1]);
     }
   });
 }

@@ -64,15 +64,32 @@ test('spotlight layout: toggle, keys switch, audio follows', async () => {
   await expect(tiles).toHaveCount(3);
   const muted = () => win.evaluate(() => [...document.querySelectorAll('.tile video')].map((v) => v.muted));
 
-  await win.locator('#spotlight').click();
+  const slots = () => win.evaluate(() => [...document.querySelectorAll('.tile')]
+    .map((t) => (t.classList.contains('featured') ? 'A' : t.classList.contains('featured2') ? 'B' : '-')).join(''));
+
+  await win.locator('#layout').selectOption('spot');
   await expect(win.locator('#grid')).toHaveClass(/spotlight/);
-  await expect(tiles.nth(0)).toHaveClass(/featured/);
+  expect(await slots()).toBe('A--');
   expect(await muted()).toEqual([false, true, true]);
 
   await win.keyboard.press('3');
-  await expect(tiles.nth(2)).toHaveClass(/featured/);
+  expect(await slots()).toBe('--A');
   expect(await muted()).toEqual([true, true, false]);
 
-  await win.locator('#spotlight').click();
+  await win.keyboard.press('Shift+Digit1');
+  await expect(win.locator('#layout')).toHaveValue('dual');
+  expect(await slots()).toBe('B-A');
+  expect(await muted()).toEqual([true, true, false]);
+
+  // Dragging the horizontal splitter shrinks the big row.
+  const before = (await tiles.nth(2).boundingBox()).height;
+  const h = await win.locator('#splitH').boundingBox();
+  await win.mouse.move(h.x + h.width / 2, h.y + h.height / 2);
+  await win.mouse.down();
+  await win.mouse.move(h.x + h.width / 2, h.y - 100, { steps: 5 });
+  await win.mouse.up();
+  expect((await tiles.nth(2).boundingBox()).height).toBeLessThan(before - 50);
+
+  await win.locator('#layout').selectOption('grid');
   await expect(win.locator('#grid')).not.toHaveClass(/spotlight/);
 });

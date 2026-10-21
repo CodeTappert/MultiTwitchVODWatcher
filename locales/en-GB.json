@@ -57,9 +57,10 @@
     "fullscreenTitle": "Fullscreen (videos + play bar only)",
     "fullscreenExitTitle": "Exit fullscreen",
     "speedTitle": "Playback speed",
-    "spotlight": "Spotlight",
-    "grid": "Grid",
-    "spotlightTitle": "Spotlight one video (keys 1–8 switch)"
+    "layoutTitle": "Layout · 1–8 = big video, shift+1–8 = second big video",
+    "layoutGrid": "Grid",
+    "layoutSpot": "Spotlight",
+    "layoutDual": "Spotlight ×2"
   },
   "tile": {
     "makeMaster": "Make master",

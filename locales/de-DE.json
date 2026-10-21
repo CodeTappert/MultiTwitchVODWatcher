@@ -57,9 +57,10 @@
     "fullscreenTitle": "Vollbild (nur Videos + Steuerleiste)",
     "fullscreenExitTitle": "Vollbild beenden",
     "speedTitle": "Wiedergabegeschwindigkeit",
-    "spotlight": "Spotlight",
-    "grid": "Raster",
-    "spotlightTitle": "Ein Video hervorheben (Tasten 1–8 wechseln)"
+    "layoutTitle": "Layout · 1–8 = großes Video, Umschalt+1–8 = zweites großes Video",
+    "layoutGrid": "Raster",
+    "layoutSpot": "Spotlight",
+    "layoutDual": "Spotlight ×2"
   },
   "tile": {
     "makeMaster": "Als Master",

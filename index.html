@@ -50,7 +50,10 @@
   </div>
 
   <main>
-    <div id="grid"></div>
+    <div id="grid">
+      <div id="splitH" class="split h" hidden></div>
+      <div id="splitV" class="split v" hidden></div>
+    </div>
     <div id="empty">
       <p data-i18n="empty.line1">No VODs loaded.</p>
       <p>
@@ -84,7 +87,11 @@
       <option value="4">4×</option>
     </select>
     <button id="toggleRuler" class="tool" data-i18n-title="controls.toggleRulerTitle" title="Show per-VOD timeline">▾</button>
-    <button id="spotlight" class="tool" data-i18n-title="controls.spotlightTitle" title="Spotlight one video (keys 1–8 switch)">Spotlight</button>
+    <select id="layout" class="tool" data-i18n-title="controls.layoutTitle" title="Layout">
+      <option value="grid" data-i18n="controls.layoutGrid">Grid</option>
+      <option value="spot" data-i18n="controls.layoutSpot">Spotlight</option>
+      <option value="dual" data-i18n="controls.layoutDual">Spotlight ×2</option>
+    </select>
     <button id="fullscreen" class="tool" data-i18n-title="controls.fullscreenTitle" title="Fullscreen (videos + play bar only)">⛶</button>
   </footer>
 
