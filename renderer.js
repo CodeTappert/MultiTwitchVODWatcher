@@ -679,7 +679,9 @@ function buildTile(v) {
     pth.textContent = v.path;
     const btn = miniButton(t('tile.locateFile'), '', () => locateFile(v));
     btn.setAttribute('data-i18n', 'tile.locateFile');
-    overlay.append(msg, pth, btn);
+    const rm = miniButton(t('tile.removeTitle'), 'danger', () => removeVideo(v));
+    rm.setAttribute('data-i18n', 'tile.removeTitle');
+    overlay.append(msg, pth, btn, rm);
     holder.appendChild(overlay);
     v.missingOverlay = overlay;
   }

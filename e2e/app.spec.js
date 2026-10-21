@@ -39,3 +39,16 @@ test('URL panel toggles', async () => {
   await expect(win.locator('#urlPanel')).toBeVisible();
   await expect(win.locator('#urls')).toBeVisible();
 });
+
+test('missing file can be removed from its overlay', async () => {
+  await app.close();
+  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'vodsync-e2e-'));
+  fs.writeFileSync(path.join(userData, 'session.json'),
+    JSON.stringify({ videos: [{ path: path.join(userData, 'gone.mp4'), name: 'gone.mp4' }] }));
+  app = await electron.launch({ args: ['.', `--user-data-dir=${userData}`] });
+  win = await app.firstWindow();
+  const overlay = win.locator('.missing-overlay');
+  await expect(overlay).toBeVisible();
+  await overlay.locator('button.danger').click();
+  await expect(win.locator('.tile')).toHaveCount(0);
+});
