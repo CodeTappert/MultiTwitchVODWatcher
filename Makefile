@@ -3,7 +3,7 @@
 # Requires Node.js/npm. Packaging uses electron-builder.
 # Note: you can only build the OS's own targets reliably:
 #   - Windows -> win
-#   - Linux   -> linux (AppImage/deb)
+#   - Linux   -> linux (AppImage/deb/rpm/pacman/tar.gz; rpm needs `rpm`, pacman needs `bsdtar`)
 #   - macOS   -> mac (dmg/zip)
 # Cross-building Windows from Linux needs wine; macOS builds require macOS.
 
@@ -14,7 +14,7 @@ help:
 	@echo "make start     - run the app in development"
 	@echo "make dist      - package for the current OS"
 	@echo "make win       - package Windows (nsis + portable)"
-	@echo "make linux     - package Linux (AppImage + deb)"
+	@echo "make linux     - package Linux (AppImage, deb, rpm, pacman, tar.gz)"
 	@echo "make mac       - package macOS (dmg + zip)"
 	@echo "make clean     - remove dist/ output"
 
